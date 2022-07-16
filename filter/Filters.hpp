@@ -1944,6 +1944,18 @@ static DetectionInfo detect(File *in, uint64_t blockSize, const TransformOptions
   if (detectionInfo.Type != BlockType::DEFAULT)
     quit("detect(): detection didn't finish properly.");
 
+  //special detections (using hash signature)
+  //we could detect these *types* of content properly, but since
+  //they are rare, it's just much simpler to detect only those files 
+  //we are targeting
+
+  //printf("BlockHash: %" PRIu64 "\n", blockHash);
+
+  if (blockHash == UINT64_C(16175250862432333790) && blockSize == 513216) { //calgary/pic; canterbury/ptt5
+    detectionInfo.IMG_DET(start, BlockType::IMAGE1, 0, 0, 1728 / 8, 2376);
+    return detectionInfo;
+  }
+
   //nothing detected
   detectionInfo.Type = BlockType::DEFAULT;
   detectionInfo.DataStart = start + n;

@@ -8,7 +8,7 @@
 //////////////////////// Versioning ////////////////////////////////////////
 
 #define PROGNAME     "paq8px"
-#define PROGVERSION  "207"  //update version here before publishing your changes
+#define PROGVERSION  "207fix1-preview"  //update version here before publishing your changes
 #define PROGYEAR     "2022"
 
 
@@ -131,10 +131,15 @@ static void printHelp() {
          "\n"
          "Additional optional switches:\n"
          "\n"
-         "    -skipdetection\n"
-         "    Skip block detection, use generic model set only.\n" 
+         "    -forcebinary\n"
+         "    Skip block detection, use the DEFAULT (binary aka generic) model set only.\n" 
          "    It helps when block detection would find false positives in a file with purely binary content.\n"
          "\n"
+         "\n"
+         "    -forcetext\n"
+         "    Skip block detection, use the TEXT model set only.\n" 
+         "    It helps when block detection would detect the file as DEFAULT with text-like content.\n"
+         "\n"        
          "\n"
          "    -v\n"
          "    Print more detailed (verbose) information to screen.\n"
@@ -331,8 +336,10 @@ int processCommandLine(int argc, char **argv) {
             quit("The -log switch requires a filename.");
           }
           logfile += argv[i];
-        } else if( strcasecmp(argv[i], "-skipdetection") == 0 ) {
-          shared.SetOptionSkipBlockDetection();
+        } else if( strcasecmp(argv[i], "-forcebinary") == 0 ) {
+          shared.SetOptionDetectBlockAsBinary();
+        } else if( strcasecmp(argv[i], "-forcetext") == 0 ) {
+          shared.SetOptionDetectBlockAsText();
         }
         else if( strcasecmp(argv[i], "-simd") == 0 ) {
           if( ++i == argc ) {

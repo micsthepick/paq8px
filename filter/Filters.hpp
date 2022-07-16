@@ -2358,15 +2358,16 @@ static void compressfile(const Shared* const shared, const char *filename, uint6
   printf("Block segmentation:\n");
   String blstr;
   TransformOptions transformOptions(shared);
-  if (shared->GetOptionSkipBlockDetection()) {
-    // skip blockType detection + compress
+  BlockType forcedBlockType = shared->GetOptionDetectBlockAsBinary() ? BlockType::DEFAULT : shared->GetOptionDetectBlockAsText() ? BlockType::TEXT : BlockType::Count;
+  if (forcedBlockType != BlockType::Count) {
+    // skip blockType detection + compress with DEFAULT or TEXT
     const uint64_t begin = 0;
     int blNum = 0;
     const int info = -1;
     float p1 = 0.0f;
     float p2 = 1.0f;
     const float pscale = fileSize != 0 ? (p2 - p1) / fileSize : 0;
-    compressBlock(&in, begin, fileSize, /*ref: */ blNum, BlockType::DEFAULT, info, en, /*in: */ blstr, /*ref: */ p1, /*ref: */ p2, pscale, &transformOptions);
+    compressBlock(&in, begin, fileSize, /*ref: */ blNum, forcedBlockType, info, en, /*in: */ blstr, /*ref: */ p1, /*ref: */ p2, pscale, &transformOptions);
   }
   else {
     // detect block types + compress

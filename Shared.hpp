@@ -37,7 +37,8 @@ private:
 
   // block detection related options (these flags are not stored in the archive)
   static constexpr uint8_t OPTION_BRUTEFORCE_DEFLATE_DETECTION = 1U;
-  static constexpr uint8_t OPTION_SKIP_BLOCK_DETECTION = 2U;
+  static constexpr uint8_t OPTION_DETECT_BLOCK_AS_BINARY = 2U;
+  static constexpr uint8_t OPTION_DETECT_BLOCK_AS_TEXT = 4U;
 
 public:
 
@@ -61,7 +62,8 @@ public:
   bool GetOptionTrainLSTM() const { return (options & OPTION_TRAINLSTM) != 0; }
 
   bool GetOptionBruteforceDeflateDetection() const { return (detectionOptions & OPTION_BRUTEFORCE_DEFLATE_DETECTION) != 0; }
-  bool GetOptionSkipBlockDetection() const { return (detectionOptions & OPTION_SKIP_BLOCK_DETECTION) != 0; }
+  bool GetOptionDetectBlockAsBinary() const { return (detectionOptions & OPTION_DETECT_BLOCK_AS_BINARY) != 0; }
+  bool GetOptionDetectBlockAsText() const { return (detectionOptions & OPTION_DETECT_BLOCK_AS_TEXT) != 0; }
 
   // Setters
   void SetOptionMultipleFileMode() { options |= OPTION_MULTIPLE_FILE_MODE; }
@@ -73,7 +75,8 @@ public:
   void SetOptionTrainLSTM() { options |= OPTION_TRAINLSTM; }
 
   void SetOptionBruteforceDeflateDetection() { detectionOptions |= OPTION_BRUTEFORCE_DEFLATE_DETECTION; }
-  void SetOptionSkipBlockDetection() { detectionOptions |= OPTION_SKIP_BLOCK_DETECTION; }
+  void SetOptionDetectBlockAsBinary() { detectionOptions |= OPTION_DETECT_BLOCK_AS_BINARY; }
+  void SetOptionDetectBlockAsText() { detectionOptions |= OPTION_DETECT_BLOCK_AS_TEXT; }
 
   struct {
 

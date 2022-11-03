@@ -92,7 +92,7 @@ public:
     size_t const epoch)
   {
     for (size_t i = 0; i < num_cells; i++) {
-      if (simd == SIMDType::SIMD_AVX2)
+      if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512)
         norm[epoch][i] = dot256_ps_fma3(&input[0], &weights[i][output_size], input.size(), weights[i][input_symbol]);
       else {
         float f = weights[i][input_symbol];
@@ -142,7 +142,7 @@ public:
 
     if (layer > 0) {
       for (size_t i = 0; i < num_cells; i++) {
-        if (simd == SIMDType::SIMD_AVX2)
+        if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512)
           (*hidden_error)[i] += dot256_ps_fma3(&error[0], &transpose[num_cells + i][0], num_cells, 0.f);
         else {
           float f = 0.f;
@@ -156,7 +156,7 @@ public:
 
     if (epoch > 0) {
       for (size_t i = 0; i < num_cells; i++) {
-        if (simd == SIMDType::SIMD_AVX2)
+        if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512)
           (*stored_error)[i] += dot256_ps_fma3(&error[0], &transpose[i][0], num_cells, 0.f);
         else {
           float f = 0.f;

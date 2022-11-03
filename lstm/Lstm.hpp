@@ -261,7 +261,7 @@ public:
       }
     }
 
-    if (simd == SIMDType::SIMD_AVX2)
+    if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512)
       SoftMaxSimdAVX2();
     else
       SoftMaxSimdNone();

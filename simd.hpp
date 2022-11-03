@@ -5,14 +5,15 @@
 // Uncomment one or more of the following includes if you plan adding more SIMD dispatching
 //#include <mmintrin.h>  //MMX
 //#include <xmmintrin.h> //SSE
-#include <emmintrin.h> //SSE2
+//#include <emmintrin.h> //SSE2
 //#include <pmmintrin.h> //SSE3
 //#include <tmmintrin.h> //SSSE3
 //#include <smmintrin.h> //SSE4.1
 //#include <nmmintrin.h> //SSE4.2
 //#include <ammintrin.h> //SSE4A
-#include <immintrin.h> //AVX, AVX2
+//#include <immintrin.h> //AVX, AVX2
 //#include <zmmintrin.h> //AVX512
+#include <x86intrin.h>
 #endif
 
 //define CPUID
@@ -57,7 +58,7 @@ static inline unsigned long long xgetbv(unsigned long ctr) {
  : SSE4A //SSE4A is not supported on Intel, so we will exclude it
 8: AVX
 9: AVX2
- : AVX512 //TODO
+10: AVX512
 11: NEON
 */
 static int simdDetect() {
@@ -112,6 +113,10 @@ static int simdDetect() {
     return 8; //no AVX2
   }
   //AVX2: OK
-  return 9;
+  if((cpuidResult[1] & (1 << 16)) == 0 || (cpuidResult[1] & (1 << 30)) == 0 ) {
+    return 9; //no AVX512F or AVX512BW
+  }
+  //AVX512: OK
+  return 10;
 #endif
 }

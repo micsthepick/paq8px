@@ -1,24 +1,11 @@
 #pragma once
 
 ///////////////////////// SIMD Vectorization detection //////////////////////////////////
-#if (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
-// Uncomment one or more of the following includes if you plan adding more SIMD dispatching
-//#include <mmintrin.h>  //MMX
-//#include <xmmintrin.h> //SSE
-//#include <emmintrin.h> //SSE2
-//#include <pmmintrin.h> //SSE3
-//#include <tmmintrin.h> //SSSE3
-//#include <smmintrin.h> //SSE4.1
-//#include <nmmintrin.h> //SSE4.2
-//#include <ammintrin.h> //SSE4A
-//#include <immintrin.h> //AVX, AVX2
-//#include <zmmintrin.h> //AVX512
-#include <x86intrin.h>
-#endif
 
 //define CPUID
 #if defined(__GNUC__) || defined(__clang__)
 #if !defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON)
+#include <x86intrin.h>
 #include <cpuid.h>
 #define cpuid(info, x) __cpuid_count(x, 0, (info)[0], (info)[1], (info)[2], (info)[3])
 #endif
@@ -58,7 +45,7 @@ static inline unsigned long long xgetbv(unsigned long ctr) {
  : SSE4A //SSE4A is not supported on Intel, so we will exclude it
 8: AVX
 9: AVX2
-10: AVX512
+10: AVX512 //AVX512F + AVX512BW
 11: NEON
 */
 static int simdDetect() {
@@ -114,7 +101,7 @@ static int simdDetect() {
   }
   //AVX2: OK
   if((cpuidResult[1] & (1 << 16)) == 0 || (cpuidResult[1] & (1 << 30)) == 0 ) {
-    return 9; //no AVX512F or AVX512BW
+    return 9; //no AVX512F + AVX512BW
   }
   //AVX512: OK
   return 10;

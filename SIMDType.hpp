@@ -5,5 +5,6 @@ enum class SIMDType {
   SIMD_SSE2, 
   SIMD_SSSE3, 
   SIMD_AVX2, 
+  SIMD_AVX512, 
   SIMD_NEON
 };

@@ -87,7 +87,7 @@ public:
 
     this->mid = (this->bot + this->top)>>1;
     float prediction, num, denom;
-    if (simd == SIMDType::SIMD_AVX2) {
+    if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512) {
       num = sum256_ps(&this->probs[this->mid + 1], this->top - this->mid, 0.f);
       denom = sum256_ps(&this->probs[this->bot], this->mid + 1 - this->bot, num);
     }

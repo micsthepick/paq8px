@@ -143,7 +143,7 @@ static void printHelp() {
          "    Logs (appends) compression results in the specified tab separated LOGFILE.\n"
          "    Logging is only applicable for compression.\n"
          "\n"
-         "    -simd [NONE|SSE2|SSSE3|AVX2|NEON]\n"
+         "    -simd [NONE|SSE2|SSSE3|AVX2|AVX512|NEON]\n"
          "    Overrides detected SIMD instruction set for neural network operations\n"
          "\n"
          "\n"
@@ -179,6 +179,8 @@ static void printSimdInfo(int simdIset, int detectedSimdIset) {
   printf("Using ");
   if (simdIset == 11) {
     printf("NEON");
+  } else if( simdIset >= 10 ) {
+    printf("AVX512");
   } else if( simdIset >= 9 ) {
     printf("AVX2");
   } else if (simdIset >= 5) {
@@ -346,10 +348,12 @@ int processCommandLine(int argc, char **argv) {
             simdIset = 5;
          } else if( strcasecmp(argv[i], "AVX2") == 0 ) {
             simdIset = 9;
+         } else if( strcasecmp(argv[i], "AVX512") == 0 ) {
+            simdIset = 10;
          } else if (strcasecmp(argv[i], "NEON") == 0) {
             simdIset = 11;
           } else {
-            quit("Invalid -simd option. Use -simd NONE, -simd SSE2, -simd SSSE3, -simd AVX2 or -simd NEON.");
+            quit("Invalid -simd option. Use -simd NONE, -simd SSE2, -simd SSSE3, -simd AVX2, -simd AVX512 or -simd NEON.");
           }
         } else {
           printf("Invalid command: %s", argv[i]);
@@ -389,6 +393,8 @@ int processCommandLine(int argc, char **argv) {
     // Set highest or user selected vectorization mode
     if (simdIset == 11) {
       shared.chosenSimd = SIMDType::SIMD_NEON;
+    } else if (simdIset >= 10) {
+      shared.chosenSimd = SIMDType::SIMD_AVX512;
     } else if (simdIset >= 9) {
       shared.chosenSimd = SIMDType::SIMD_AVX2;
     } else if (simdIset >= 5) {

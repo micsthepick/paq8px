@@ -53,7 +53,7 @@ private:
   }
 public:
   void Run(float* f, size_t const len) const {
-    if (simd == SIMDType::SIMD_AVX2)
+    if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512)
       RunSimdAVX2(f, len);
     else {
       for (size_t i = 0; i < len; i++)
@@ -117,7 +117,7 @@ private:
   }
 public:
   void Run(float* f, size_t const len) const {
-    if (simd == SIMDType::SIMD_AVX2)
+    if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512)
       RunSimdAVX2(f, len);
     else {
       for (size_t i = 0; i < len; i++)

@@ -15,7 +15,10 @@ private:
     * Define SIMD padding requirements.
     */
   constexpr inline int simdWidth() const {
-    if( simd == SIMDType::SIMD_AVX2 ) {
+    if( simd == SIMDType::SIMD_AVX512 ) {
+      return 64 / sizeof(short); // 512 bit (64 byte) data size
+    }
+    else if( simd == SIMDType::SIMD_AVX2 ) {
       return 32 / sizeof(short); // 256 bit (32 byte) data size
     }
     else if( simd == SIMDType::SIMD_SSE2 || simd == SIMDType::SIMD_SSSE3 || simd == SIMDType::SIMD_NEON ) {
@@ -105,6 +108,9 @@ public:
           else if (simd == SIMDType::SIMD_AVX2) {
             trainSimdAvx2(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
           }
+          else if (simd == SIMDType::SIMD_AVX512) {
+            trainSimdAvx512(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
+          }
           else if (simd == SIMDType::SIMD_NEON) {
             trainSimdNeon(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
           }
@@ -139,6 +145,9 @@ public:
           else if (simd == SIMDType::SIMD_AVX2) {
             dp = dotProductSimdAvx2(&tx[0], &wx[cxt[i] * n], nx);
           }
+          else if (simd == SIMDType::SIMD_AVX512) {
+            dp = dotProductSimdAvx512(&tx[0], &wx[cxt[i] * n], nx);
+          }
           else if (simd == SIMDType::SIMD_NEON) {
             dp = dotProductSimdNeon(&tx[0], &wx[cxt[i] * n], nx);
           }
@@ -168,6 +177,9 @@ public:
     }
     else if( simd == SIMDType::SIMD_AVX2 ) {
       dp = dotProductSimdAvx2(&tx[0], &wx[cxt[0] * n], nx);
+    }
+    else if (simd == SIMDType::SIMD_AVX512 ) {
+      dp = dotProductSimdAvx512(&tx[0], &wx[cxt[0] * n], nx);
     }
     else if (simd == SIMDType::SIMD_NEON) {
       dp = dotProductSimdNeon(&tx[0], &wx[cxt[0] * n], nx);

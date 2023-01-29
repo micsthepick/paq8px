@@ -16,7 +16,7 @@ public:
     float const learning_rate,
     float const gradient_clip)
   {
-    if (sh->chosenSimd == SIMDType::SIMD_AVX2)
+    if (sh->chosenSimd == SIMDType::SIMD_AVX2 || sh->chosenSimd == SIMDType::SIMD_AVX512)
       return new SIMDLstmModel<SIMDType::SIMD_AVX2, Bits>(sh, num_cells, num_layers, horizon, learning_rate, gradient_clip);
     else
       return new SIMDLstmModel<SIMDType::SIMD_NONE, Bits>(sh, num_cells, num_layers, horizon, learning_rate, gradient_clip);

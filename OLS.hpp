@@ -113,7 +113,7 @@ public:
 
   inline void update(const T val) {
 #ifdef __GNUC__
-    if( shared->chosenSimd == SIMDType::SIMD_AVX2 ) {
+    if( shared->chosenSimd == SIMDType::SIMD_AVX2 || shared->chosenSimd == SIMDType::SIMD_AVX512 ) {
       updateAVX2(val);
     } else
 #endif

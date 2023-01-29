@@ -17,6 +17,9 @@ Mixer* MixerFactory::createMixer(const int n, const int m, const int s, const in
   else if (chosenSimd == SIMDType::SIMD_AVX2) {
     return new SIMDMixer<SIMDType::SIMD_AVX2>(shared, n, m, s, promoted);
   }
+  else if (chosenSimd == SIMDType::SIMD_AVX512) {
+    return new SIMDMixer<SIMDType::SIMD_AVX512>(shared, n, m, s, promoted);
+  }
   else if (chosenSimd == SIMDType::SIMD_NEON) {
     return new SIMDMixer<SIMDType::SIMD_NEON>(shared, n, m, s, promoted);
   }

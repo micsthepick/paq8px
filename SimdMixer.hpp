@@ -64,57 +64,54 @@ public:
     const int target = y << 12;
     if( nx > 0 ) {
       for( uint64_t i = 0; i < numContexts; ++i ) {
-        if (cxt[i] != UINT32_MAX) {
-          int err = target - pr[i];
-          const bool isAdaptiveLearningRate = shared->GetOptionAdaptiveLearningRate();
-          if (isAdaptiveLearningRate) {
-            const uint32_t logErr = min(0xF, ilog2(abs(err)));
-            info[i].sum -= square(info[i].data[1] >> 28);
-            info[i].data[1] <<= 4;
-            info[i].data[1] |= info[i].data[0] >> 28;
-            info[i].data[0] <<= 4;
-            info[i].data[0] |= logErr;
-            info[i].sum += square(logErr);
-            info[i].collected += info[i].collected < 4096;
-            info[i].mask <<= 1;
-            info[i].mask |= (logErr <= ((info[i].data[0] >> 4) & 0xF));
-            const uint32_t count = bitCount(info[i].mask);
-            if (info[i].collected >= 64 && (info[i].sum > 1500 + uint32_t(rates[i]>>10) || count < 9 || (info[i].mask & 0xFF) == 0)) {
-              rates[i] = 7 * 65536;
-              memset(&info[i], 0, sizeof(ErrorInfo));
-            }
-            else if (info[i].collected == 4096 && info[i].sum >= 56 && info[i].sum <= 144 && count > 28 - uint32_t(rates[i]>>16) &&
-              ((info[i].mask & 0xFF) == 0xFF)) {
-              rates[i] = max(rates[i] - 65536, 2 * 65536);
-              info[i].reset();
-            }
+        int err = target - pr[i];
+        const bool isAdaptiveLearningRate = shared->GetOptionAdaptiveLearningRate();
+        if (isAdaptiveLearningRate) {
+          const uint32_t logErr = min(0xF, ilog2(abs(err)));
+          info[i].sum -= square(info[i].data[1] >> 28);
+          info[i].data[1] <<= 4;
+          info[i].data[1] |= info[i].data[0] >> 28;
+          info[i].data[0] <<= 4;
+          info[i].data[0] |= logErr;
+          info[i].sum += square(logErr);
+          info[i].collected += info[i].collected < 4096;
+          info[i].mask <<= 1;
+          info[i].mask |= (logErr <= ((info[i].data[0] >> 4) & 0xF));
+          const uint32_t count = bitCount(info[i].mask);
+          if (info[i].collected >= 64 && (info[i].sum > 1500 + uint32_t(rates[i]>>10) || count < 9 || (info[i].mask & 0xFF) == 0)) {
+            rates[i] = 7 * 65536;
+            memset(&info[i], 0, sizeof(ErrorInfo));
           }
-          if (err == 0)
-            continue;
-          int rate = rates[i];
-          if (mp == nullptr) {
-            if (rate > MIN_LEARNING_RATE_S1) rate--;
+          else if (info[i].collected == 4096 && info[i].sum >= 56 && info[i].sum <= 144 && count > 28 - uint32_t(rates[i]>>16) &&
+            ((info[i].mask & 0xFF) == 0xFF)) {
+            rates[i] = max(rates[i] - 65536, 2 * 65536);
+            info[i].reset();
           }
-          else {
-            if (rate > MIN_LEARNING_RATE_SN) rate--;
-          }
-          rates[i] = rate;
-          if (simd == SIMDType::SIMD_NONE) {
-            trainSimdNone(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
-          }
-          else if (simd == SIMDType::SIMD_SSE2 || simd == SIMDType::SIMD_SSSE3) {
-            trainSimdSse2(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
-          }
-          else if (simd == SIMDType::SIMD_AVX2) {
-            trainSimdAvx2(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
-          }
-          else if (simd == SIMDType::SIMD_AVX512) {
-            trainSimdAvx512(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
-          }
-          else if (simd == SIMDType::SIMD_NEON) {
-            trainSimdNeon(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
-          }
-
+        }
+        if (err == 0)
+          continue;
+        int rate = rates[i];
+        if (mp == nullptr) {
+          if (rate > MIN_LEARNING_RATE_S1) rate--;
+        }
+        else {
+          if (rate > MIN_LEARNING_RATE_SN) rate--;
+        }
+        rates[i] = rate;
+        if (simd == SIMDType::SIMD_NONE) {
+          trainSimdNone(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
+        }
+        else if (simd == SIMDType::SIMD_SSE2 || simd == SIMDType::SIMD_SSSE3) {
+          trainSimdSse2(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
+        }
+        else if (simd == SIMDType::SIMD_AVX2) {
+          trainSimdAvx2(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
+        }
+        else if (simd == SIMDType::SIMD_AVX512) {
+          trainSimdAvx512(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
+        }
+        else if (simd == SIMDType::SIMD_NEON) {
+          trainSimdNeon(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
         }
       }
     }
@@ -135,32 +132,30 @@ public:
     if( mp ) { // combine outputs
       for( uint64_t i = 0; i < numContexts; ++i ) {
         int dp = 0;
-        if (cxt[i] != UINT32_MAX) { // valid mixer context (not to skip)
-          if (simd == SIMDType::SIMD_NONE) {
-            dp = dotProductSimdNone(&tx[0], &wx[cxt[i] * n], nx);
-          }
-          else if (simd == SIMDType::SIMD_SSE2 || simd == SIMDType::SIMD_SSSE3) {
-            dp = dotProductSimdSse2(&tx[0], &wx[cxt[i] * n], nx);
-          }
-          else if (simd == SIMDType::SIMD_AVX2) {
-            dp = dotProductSimdAvx2(&tx[0], &wx[cxt[i] * n], nx);
-          }
-          else if (simd == SIMDType::SIMD_AVX512) {
-            dp = dotProductSimdAvx512(&tx[0], &wx[cxt[i] * n], nx);
-          }
-          else if (simd == SIMDType::SIMD_NEON) {
-            dp = dotProductSimdNeon(&tx[0], &wx[cxt[i] * n], nx);
-          }
-          else {
-            static_assert("Unknown SIMD parameter");
-          }
-          dp = (dp * scaleFactor) >> 16;
-          if (dp < -2047) {
-            dp = -2047;
-          }
-          else if (dp > 2047) {
-            dp = 2047;
-          }
+        if (simd == SIMDType::SIMD_NONE) {
+          dp = dotProductSimdNone(&tx[0], &wx[cxt[i] * n], nx);
+        }
+        else if (simd == SIMDType::SIMD_SSE2 || simd == SIMDType::SIMD_SSSE3) {
+          dp = dotProductSimdSse2(&tx[0], &wx[cxt[i] * n], nx);
+        }
+        else if (simd == SIMDType::SIMD_AVX2) {
+          dp = dotProductSimdAvx2(&tx[0], &wx[cxt[i] * n], nx);
+        }
+        else if (simd == SIMDType::SIMD_AVX512) {
+          dp = dotProductSimdAvx512(&tx[0], &wx[cxt[i] * n], nx);
+        }
+        else if (simd == SIMDType::SIMD_NEON) {
+          dp = dotProductSimdNeon(&tx[0], &wx[cxt[i] * n], nx);
+        }
+        else {
+          static_assert("Unknown SIMD parameter");
+        }
+        dp = (dp * scaleFactor) >> 16;
+        if (dp < -2047) {
+          dp = -2047;
+        }
+        else if (dp > 2047) {
+          dp = 2047;
         }
         mp->add(dp);
         pr[i] = squash(dp);

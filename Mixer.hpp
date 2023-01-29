@@ -227,11 +227,13 @@ struct ErrorInfo {
 };
 
 class Mixer : protected IPredictor {
-protected:
+public:
+
   static constexpr int MAX_LEARNING_RATE = 8 * 65536 - 1;
-  static constexpr int MIN_LEARNING_RATE_S1 = 2 * 65536 - 1; 
+  static constexpr int MIN_LEARNING_RATE_S1 = 2 * 65536 - 1;
   static constexpr int MIN_LEARNING_RATE_SN = 6 * 65536 - 1;
-    
+
+protected:
 
   const Shared * const shared;
   const uint32_t n; /**< max inputs */

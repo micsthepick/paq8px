@@ -6,6 +6,69 @@
 #include "Mixer.hpp"
 #include "Squash.hpp"
 
+ALWAYS_INLINE
+static int scaleDotProduct(int dp, int scaleFactor) {
+  return (dp * scaleFactor) >> 16;
+}
+
+ALWAYS_INLINE
+static int clipDotProduct(int dp) {
+  if (dp < -2047) {
+    dp = -2047;
+  }
+  else if (dp > 2047) {
+    dp = 2047;
+  }
+  return dp;
+}
+
+ALWAYS_INLINE
+static void addDotProductToNextMixer(Mixer* mp, int dp) {
+  mp->add(dp);
+}
+
+ALWAYS_INLINE
+static int processDotProduct(Mixer* mp, int dp, int scaleFactor) {
+  dp = scaleDotProduct(dp, scaleFactor);
+  dp = clipDotProduct(dp);
+  addDotProductToNextMixer(mp, dp);
+  const int pr = squash(dp);
+  return pr;
+}
+
+ALWAYS_INLINE
+int updateLearningRate(bool isAdaptiveLearningRate, ErrorInfo &info, int rate, int err, bool isLastMixerLayer) {
+  if (isAdaptiveLearningRate) {
+    const uint32_t logErr = min(0xF, ilog2(abs(err)));
+    info.sum -= square(info.data[1] >> 28);
+    info.data[1] <<= 4;
+    info.data[1] |= info.data[0] >> 28;
+    info.data[0] <<= 4;
+    info.data[0] |= logErr;
+    info.sum += square(logErr);
+    info.collected += info.collected < 4096;
+    info.mask <<= 1;
+    info.mask |= (logErr <= ((info.data[0] >> 4) & 0xF));
+    const uint32_t count = bitCount(info.mask);
+    if (info.collected >= 64 && (info.sum > 1500 + uint32_t(rate >> 10) || count < 9 || (info.mask & 0xFF) == 0)) {
+      rate = 7 * 65536;
+      memset(&info, 0, sizeof(ErrorInfo));
+    }
+    else if (info.collected == 4096 && info.sum >= 56 && info.sum <= 144 && count > 28 - uint32_t(rate >> 16) &&
+      ((info.mask & 0xFF) == 0xFF)) {
+      rate = max(rate - 65536, 2 * 65536);
+      info.reset();
+    }
+  }
+  if (isLastMixerLayer) {
+    if (rate > Mixer::MIN_LEARNING_RATE_S1) rate--;
+  }
+  else {
+    if (rate > Mixer::MIN_LEARNING_RATE_SN) rate--;
+  }
+  return rate;
+}
+
 template<SIMDType simd>
 class SIMDMixer : public Mixer {
 private:
@@ -14,7 +77,7 @@ private:
   /**
     * Define SIMD padding requirements.
     */
-  constexpr inline int simdWidth() const {
+  constexpr int simdWidth() const {
     if( simd == SIMDType::SIMD_AVX512 ) {
       return 64 / sizeof(short); // 512 bit (64 byte) data size
     }
@@ -63,41 +126,11 @@ public:
     INJECT_SHARED_y
     const int target = y << 12;
     if( nx > 0 ) {
+      const bool isAdaptiveLearningRate = shared->GetOptionAdaptiveLearningRate();
+      const bool isLastMixerLayer = mp == nullptr;
       for( uint64_t i = 0; i < numContexts; ++i ) {
         int err = target - pr[i];
-        const bool isAdaptiveLearningRate = shared->GetOptionAdaptiveLearningRate();
-        if (isAdaptiveLearningRate) {
-          const uint32_t logErr = min(0xF, ilog2(abs(err)));
-          info[i].sum -= square(info[i].data[1] >> 28);
-          info[i].data[1] <<= 4;
-          info[i].data[1] |= info[i].data[0] >> 28;
-          info[i].data[0] <<= 4;
-          info[i].data[0] |= logErr;
-          info[i].sum += square(logErr);
-          info[i].collected += info[i].collected < 4096;
-          info[i].mask <<= 1;
-          info[i].mask |= (logErr <= ((info[i].data[0] >> 4) & 0xF));
-          const uint32_t count = bitCount(info[i].mask);
-          if (info[i].collected >= 64 && (info[i].sum > 1500 + uint32_t(rates[i]>>10) || count < 9 || (info[i].mask & 0xFF) == 0)) {
-            rates[i] = 7 * 65536;
-            memset(&info[i], 0, sizeof(ErrorInfo));
-          }
-          else if (info[i].collected == 4096 && info[i].sum >= 56 && info[i].sum <= 144 && count > 28 - uint32_t(rates[i]>>16) &&
-            ((info[i].mask & 0xFF) == 0xFF)) {
-            rates[i] = max(rates[i] - 65536, 2 * 65536);
-            info[i].reset();
-          }
-        }
-        if (err == 0)
-          continue;
-        int rate = rates[i];
-        if (mp == nullptr) {
-          if (rate > MIN_LEARNING_RATE_S1) rate--;
-        }
-        else {
-          if (rate > MIN_LEARNING_RATE_SN) rate--;
-        }
-        rates[i] = rate;
+        const int rate = rates[i] = updateLearningRate(isAdaptiveLearningRate, info[i], rates[i], err, isLastMixerLayer);
         if (simd == SIMDType::SIMD_NONE) {
           trainSimdNone(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
         }
@@ -150,15 +183,7 @@ public:
         else {
           static_assert("Unknown SIMD parameter");
         }
-        dp = (dp * scaleFactor) >> 16;
-        if (dp < -2047) {
-          dp = -2047;
-        }
-        else if (dp > 2047) {
-          dp = 2047;
-        }
-        mp->add(dp);
-        pr[i] = squash(dp);
+        pr[i] = processDotProduct(mp, dp, scaleFactor);
       }
       mp->set(0, 1);
       return mp->p();
@@ -182,7 +207,7 @@ public:
     else {
       static_assert("Unknown SIMD parameter");
     }
-    dp = (dp * scaleFactor) >> 16;
+    dp = scaleDotProduct(dp, scaleFactor);
     return pr[0] = squash(dp);
   }
 };

@@ -8,11 +8,8 @@ Mixer* MixerFactory::createMixer(const int n, const int m, const int s, const in
   if (chosenSimd == SIMDType::SIMD_NONE) {
     return new SIMDMixer<SIMDType::SIMD_NONE>(shared, n, m, s, promoted);
   }
-  else if (chosenSimd == SIMDType::SIMD_SSE2) {
+  else if (chosenSimd == SIMDType::SIMD_SSE2 || chosenSimd == SIMDType::SIMD_SSSE3) {
     return new SIMDMixer<SIMDType::SIMD_SSE2>(shared, n, m, s, promoted);
-  }
-  else if (chosenSimd == SIMDType::SIMD_SSSE3) {
-    return new SIMDMixer<SIMDType::SIMD_SSSE3>(shared, n, m, s, promoted);
   }
   else if (chosenSimd == SIMDType::SIMD_AVX2) {
     return new SIMDMixer<SIMDType::SIMD_AVX2>(shared, n, m, s, promoted);

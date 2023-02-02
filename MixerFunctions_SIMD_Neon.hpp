@@ -1,8 +1,10 @@
 #pragma once
 
-#include "MixerFunctions_SIMD.hpp"
+#include "SystemDefines.hpp"
 
-#if (defined(__GNUC__) || defined(__clang__)) && (defined(__ARM_FEATURE_SIMD32) || defined(__ARM_NEON))
+#ifdef ARM_NEON_AVAILABLE
+
+#if (defined(__GNUC__) || defined(__clang__))
 static inline int32x4_t _mm_mulhi_epi16(int32x4_t a, int32x4_t b) {
   int32x4_t rl = vmull_s16(vget_low_s16(vreinterpretq_s16_s32(a)), vget_low_s16(vreinterpretq_s16_s32(b)));
   int32x4_t rh = vmull_s16(vget_high_s16(vreinterpretq_s16_s32(a)), vget_high_s16(vreinterpretq_s16_s32(b)));
@@ -20,9 +22,6 @@ static inline int32x4_t _mm_madd_epi16(int32x4_t a, int32x4_t b) {
 #endif
 
 int dotProductSimdNeon(const short* const t, const short* const w, int n) {
-#if (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
-  return 0;
-#else
   int32x4_t sum = vdupq_n_s32(0);
 
   while ((n -= 8) >= 0) {
@@ -34,13 +33,9 @@ int dotProductSimdNeon(const short* const t, const short* const w, int n) {
   sum = vaddq_s32(sum, vreinterpretq_s32_s8(vextq_s8(vreinterpretq_s8_s32(sum), vdupq_n_s8(0), 8)));
   sum = vaddq_s32(sum, vreinterpretq_s32_s8(vextq_s8(vreinterpretq_s8_s32(sum), vdupq_n_s8(0), 4)));
   return vgetq_lane_s32(sum, 0);
-#endif
 }
 
 void trainSimdNeon(const short* const t, short* const w, int n, const int e) {
-#if (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
-  return;
-#else
   const int32x4_t one = vreinterpretq_s32_s16(vdupq_n_s16(1));
   const int32x4_t err = vreinterpretq_s32_s16(vdupq_n_s16(short(e)));
 
@@ -52,5 +47,6 @@ void trainSimdNeon(const short* const t, short* const w, int n, const int e) {
     tmp = vreinterpretq_s32_s16(vqaddq_s16(vreinterpretq_s16_s32(tmp), vreinterpretq_s16_s32(*reinterpret_cast<int32x4_t*>(&w[n]))));
     *reinterpret_cast<int32x4_t*>(&w[n]) = tmp;
   }
-#endif
 }
+
+#endif // ARM_NEON_AVAILABLE

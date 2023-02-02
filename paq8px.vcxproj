@@ -414,7 +414,6 @@
     <ClInclude Include="lstm\SimdLstmModel.hpp" />
     <ClInclude Include="Mixer.hpp" />
     <ClInclude Include="MixerFactory.hpp" />
-    <ClInclude Include="MixerFunctions_SIMD.hpp" />
     <ClInclude Include="MixerFunctions_SIMD_AVX2.hpp" />
     <ClInclude Include="MixerFunctions_SIMD_AVX512.hpp" />
     <ClInclude Include="MixerFunctions_SIMD_Neon.hpp" />

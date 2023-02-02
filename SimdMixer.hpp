@@ -1,10 +1,6 @@
 #pragma once
 
-#include "UpdateBroadcaster.hpp"
-#include "BitCount.hpp"
-#include "Ilog.hpp"
 #include "Mixer.hpp"
-#include "Squash.hpp"
 #include "SIMDType.hpp"
 
 template<SIMDType simd>
@@ -22,8 +18,3 @@ public:
 };
 
 
-template class SIMDMixer<SIMDType::SIMD_NONE>;
-template class SIMDMixer<SIMDType::SIMD_SSE2>;
-template class SIMDMixer<SIMDType::SIMD_AVX2>;
-template class SIMDMixer<SIMDType::SIMD_AVX512>;
-template class SIMDMixer<SIMDType::SIMD_NEON>;

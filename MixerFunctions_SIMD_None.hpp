@@ -1,7 +1,5 @@
 #pragma once
 
-#include "MixerFunctions_SIMD.hpp"
-
 int dotProductSimdNone(const short* const t, const short* const w, int n) {
   int sum = 0;
   while ((n -= 2) >= 0) {

@@ -1,14 +1,13 @@
 #pragma once
 
-#include "MixerFunctions_SIMD.hpp"
+#include "SystemDefines.hpp"
 
-#if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+#ifdef X64_SIMD_AVAILABLE
+
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx2")))
 #endif
 int dotProductSimdAvx2(const short* const t, const short* const w, int n) {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_X64)
-  return 0;
-#else
   __m256i sum = _mm256_setzero_si256();
 
   while ((n -= 16) >= 0) {
@@ -24,16 +23,12 @@ int dotProductSimdAvx2(const short* const t, const short* const w, int n) {
   newSum = _mm_add_epi32(newSum, _mm_srli_si128(newSum, 8));
   newSum = _mm_add_epi32(newSum, _mm_srli_si128(newSum, 4));
   return _mm_cvtsi128_si32(newSum);
-#endif
 }
 
-#if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx2")))
 #endif
 void trainSimdAvx2(const short* const t, short* const w, int n, const int e) {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_X64)
-  return;
-#else
   const __m256i one = _mm256_set1_epi16(1);
   const __m256i err = _mm256_set1_epi16(short(e));
 
@@ -45,5 +40,6 @@ void trainSimdAvx2(const short* const t, short* const w, int n, const int e) {
     tmp = _mm256_adds_epi16(tmp, *reinterpret_cast<__m256i*>(&w[n]));
     *reinterpret_cast<__m256i*>(&w[n]) = tmp;
   }
-#endif
 }
+
+#endif // X64_SIMD_AVAILABLE

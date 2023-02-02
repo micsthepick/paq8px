@@ -148,7 +148,7 @@ static void printHelp() {
          "    Logs (appends) compression results in the specified tab separated LOGFILE.\n"
          "    Logging is only applicable for compression.\n"
          "\n"
-         "    -simd [NONE|SSE2|SSSE3|AVX2|AVX512|NEON]\n"
+         "    -simd [NONE|SSE2|AVX2|AVX512|NEON]\n"
          "    Overrides detected SIMD instruction set for neural network operations\n"
          "\n"
          "\n"
@@ -178,7 +178,7 @@ static void printSimdInfo(int simdIset, int detectedSimdIset) {
   if( detectedSimdIset < 0 || detectedSimdIset > 11 ) {
     quit("Oops, sorry. Unexpected result.");
   }
-  static const char *vectorizationString[12] = {"none", "MMX", "SSE", "SSE2", "SSE3", "SSSE3", "SSE4.1", "SSE4.2", "AVX", "AVX2", "AVX512", "NEON"};
+  static const char *vectorizationString[12] = {"none", "MMX", "SSE", "SSE2", "SSE3", "SSSE3", "SSE4.1", "SSE4.2", "AVX", "AVX2", "AVX512", "ARM Neon"};
   printf("%s.\n", vectorizationString[detectedSimdIset]);
 
   printf("Using ");
@@ -188,8 +188,6 @@ static void printSimdInfo(int simdIset, int detectedSimdIset) {
     printf("AVX512");
   } else if( simdIset >= 9 ) {
     printf("AVX2");
-  } else if (simdIset >= 5) {
-    printf("SSE2 & SSSE3");
   } else if( simdIset >= 3 ) {
     printf("SSE2");
   } else {
@@ -345,7 +343,7 @@ int processCommandLine(int argc, char **argv) {
         }
         else if( strcasecmp(argv[i], "-simd") == 0 ) {
           if( ++i == argc ) {
-            quit("The -simd switch requires an instruction set name (NONE,SSE2,SSSE3, AVX2, NEON).");
+            quit("The -simd switch requires an instruction set name (NONE, SSE2, AVX2, AVX512, NEON).");
           }
           if( strcasecmp(argv[i], "NONE") == 0 ) {
             simdIset = 0;
@@ -360,7 +358,7 @@ int processCommandLine(int argc, char **argv) {
          } else if (strcasecmp(argv[i], "NEON") == 0) {
             simdIset = 11;
           } else {
-            quit("Invalid -simd option. Use -simd NONE, -simd SSE2, -simd SSSE3, -simd AVX2, -simd AVX512 or -simd NEON.");
+            quit("Invalid -simd option. Use -simd NONE, -simd SSE2, -simd AVX2, -simd AVX512 or -simd NEON.");
           }
         } else {
           printf("Invalid command: %s", argv[i]);
@@ -388,9 +386,6 @@ int processCommandLine(int argc, char **argv) {
     if( simdIset == -1 ) {
       simdIset = detectedSimdIset;
     }
-    if( simdIset > detectedSimdIset ) {
-      printf("\nOverriding system highest vectorization support. Expect a crash.");
-    }
 
     // Print anything only if the user wants/needs to know
     if( verbose || simdIset != detectedSimdIset ) {
@@ -404,12 +399,25 @@ int processCommandLine(int argc, char **argv) {
       shared.chosenSimd = SIMDType::SIMD_AVX512;
     } else if (simdIset >= 9) {
       shared.chosenSimd = SIMDType::SIMD_AVX2;
-    } else if (simdIset >= 5) {
-      shared.chosenSimd = SIMDType::SIMD_SSSE3;
     } else if( simdIset >= 3 ) {
       shared.chosenSimd = SIMDType::SIMD_SSE2;
     } else {
       shared.chosenSimd = SIMDType::SIMD_NONE;
+    }
+
+    if (!IS_ARM_NEON_AVAILABLE && shared.chosenSimd == SIMDType::SIMD_NEON) {
+      quit("The ARM Neon instruction set is not available on this platform.");
+    }
+    if (!IS_X64_SIMD_AVAILABLE && (
+      shared.chosenSimd == SIMDType::SIMD_SSE2 ||
+      shared.chosenSimd == SIMDType::SIMD_AVX2 ||
+      shared.chosenSimd == SIMDType::SIMD_AVX512
+      )) {
+      quit("The x64 SIMD instruction set is not available on this platform.");
+    }
+
+    if (simdIset > detectedSimdIset) {
+      printf("\nOverriding system highest vectorization support. Expect a crash.");
     }
 
     if( verbose ) {

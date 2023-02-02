@@ -11,7 +11,7 @@ static inline uint32_t clz(uint32_t x) {
   _BitScanReverse(&leading_zero, x);
   return 31u - leading_zero;
 }
-#elif __GNUC__
+#elif (defined(__GNUC__) || defined(__clang__))
 static inline uint32_t clz(uint32_t x) {
   assert(x != 0);
   return __builtin_clz(x);

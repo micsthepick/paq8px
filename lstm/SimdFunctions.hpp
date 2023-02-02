@@ -12,43 +12,34 @@ namespace {
   * Adapted from https://stackoverflow.com/questions/6996764/fastest-way-to-do-horizontal-sse-vector-sum-or-other-reduction
   */
 
-#if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+#ifdef X64_SIMD_AVAILABLE
+
+#if (defined(__GNUC__) || defined(__clang__)) 
 __attribute__((target("sse3")))
 #endif
 ALWAYS_INLINE float hsum_ps_sse3(__m128 const v) {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_X64)
-  return 0.f;
-#else
   __m128 shuf = _mm_movehdup_ps(v); // broadcast elements 3,1 to 2,0
   __m128 sums = _mm_add_ps(v, shuf);
   shuf = _mm_movehl_ps(shuf, sums); // high half -> low half
   sums = _mm_add_ss(sums, shuf);
   return _mm_cvtss_f32(sums);
-#endif
 }
 
-#if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx")))
 #endif
 ALWAYS_INLINE float hsum256_ps_avx(__m256 const v) {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_X64)
-  return 0.f;
-#else
   __m128 vlow = _mm256_castps256_ps128(v);
   __m128 vhigh = _mm256_extractf128_ps(v, 1); // high 128
   vlow = _mm_add_ps(vlow, vhigh);     // add the low 128
   return hsum_ps_sse3(vlow);         // and inline the sse3 version, which is optimal for AVX
                                      // (no wasted instructions, and all of them are the 4B minimum)
-#endif
 }
 
-#if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx2,fma")))
 #endif
-float dot256_ps_fma3(float const* x1, float const* x2, size_t const len, float init = 0.) {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_X64)
-  return 0.f;
-#else
+float dot256_ps_fma3(float const* x1, float const* x2, size_t const len, float init) {
   static constexpr size_t SIMDW = 8, CACHELINE = 64;
   size_t const limit = len & static_cast<size_t>(-static_cast<ptrdiff_t>(SIMDW));
   size_t const limit_x2 = len & static_cast<size_t>(-static_cast<ptrdiff_t>(SIMDW * 2));
@@ -71,16 +62,12 @@ float dot256_ps_fma3(float const* x1, float const* x2, size_t const len, float i
   for (; remainder > 0; remainder--)
     init += x1[len - remainder] * x2[len - remainder];
   return init + hsum256_ps_avx(sum0);
-#endif
 }
 
-#if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx2")))
 #endif
-float sum256_ps(float const* x, size_t const len, float init = 0.) {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_X64)
-  return 0.f;
-#else
+float sum256_ps(float const* x, size_t const len, float init) {
   static constexpr size_t SIMDW = 8;
   size_t const limit = len & static_cast<size_t>(-static_cast<ptrdiff_t>(SIMDW)), remainder = len & (SIMDW - 1);
   if (limit > 0) {
@@ -90,11 +77,9 @@ float sum256_ps(float const* x, size_t const len, float init = 0.) {
     init += hsum256_ps_avx(sum);
   }
   return (!remainder) ? init : std::accumulate(x + limit, x + len, init);
-#endif
 }
 
-#if defined(__i386__) || defined(__x86_64__) || defined(_M_X64)
-# if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+#if defined(__GNUC__) || defined(__clang__) 
 __attribute__((target("avx2,fma")))
 # endif
 /**
@@ -137,7 +122,7 @@ __m256 exp256_ps_fma3(__m256 const x)
   j = _mm256_slli_epi32(i, 23); /* i << 23 */
   return _mm256_castsi256_ps(_mm256_add_epi32(j, _mm256_castps_si256(p))); /* r = p * 2^i */
 }
-#endif
+#endif // X64_SIMD_AVAILABLE
 
 // non-simd vector functions
 

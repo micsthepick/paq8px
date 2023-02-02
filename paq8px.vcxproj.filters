@@ -788,9 +788,6 @@
     <ClInclude Include="MixerFunctions_SIMD_SSE2.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MixerFunctions_SIMD.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

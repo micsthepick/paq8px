@@ -1,14 +1,13 @@
 #pragma once
 
-#include "MixerFunctions_SIMD.hpp"
+#include "SystemDefines.hpp"
 
-#if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+#ifdef X64_SIMD_AVAILABLE
+
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx512bw")))
 #endif
 int dotProductSimdAvx512(const short* const t, const short* const w, int n) {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_X64)
-  return 0;
-#else
   __m512i sum = _mm512_setzero_si512();
 
   while ((n -= 32) >= 0) {
@@ -25,16 +24,12 @@ int dotProductSimdAvx512(const short* const t, const short* const w, int n) {
   newSum2 = _mm_add_epi32(newSum2, _mm_srli_si128(newSum2, 8));
   newSum2 = _mm_add_epi32(newSum2, _mm_srli_si128(newSum2, 4));
   return _mm_cvtsi128_si32(newSum2);
-#endif
 }
 
-#if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx512bw")))
 #endif
 void trainSimdAvx512(const short* const t, short* const w, int n, const int e) {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_X64)
-  return;
-#else
   const __m512i one = _mm512_set1_epi16(1);
   const __m512i err = _mm512_set1_epi16(short(e));
 
@@ -46,5 +41,6 @@ void trainSimdAvx512(const short* const t, short* const w, int n, const int e) {
     tmp = _mm512_adds_epi16(tmp, *reinterpret_cast<__m512i*>(&w[n]));
     *reinterpret_cast<__m512i*>(&w[n]) = tmp;
   }
-#endif
 }
+
+#endif // X64_SIMD_AVAILABLE

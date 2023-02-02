@@ -21,6 +21,23 @@ static_assert(sizeof(int) == 4, "sizeof(int)");
 #error Unknown target system
 #endif
 
+#if defined(__ARM_NEON)
+#define ARM_NEON_AVAILABLE
+#include <arm_neon.h>
+constexpr bool IS_ARM_NEON_AVAILABLE = true;
+#else
+constexpr bool IS_ARM_NEON_AVAILABLE = false;
+#endif
+
+#if defined(__x86_64__) || defined(_M_X64)
+#define X64_SIMD_AVAILABLE
+#include <immintrin.h>
+constexpr bool IS_X64_SIMD_AVAILABLE = true;
+#else
+constexpr bool IS_X64_SIMD_AVAILABLE = false;
+#endif
+
+
 // Floating point operations need IEEE compliance
 // Do not use compiler optimization options such as the following:
 // gcc : -ffast-math (and -Ofast, -funsafe-math-optimizations, -fno-rounding-math)
@@ -31,7 +48,7 @@ static_assert(sizeof(int) == 4, "sizeof(int)");
 
 #if defined(_MSC_VER)
 #define ALWAYS_INLINE  __forceinline
-#elif defined(__GNUC__)
+#elif (defined(__GNUC__) || defined(__clang__))
 #define ALWAYS_INLINE inline __attribute__((always_inline))
 #else
 #define ALWAYS_INLINE inline

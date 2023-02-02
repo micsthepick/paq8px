@@ -13,7 +13,10 @@ private:
   static constexpr float beta1 = static_cast<float>(static_cast<double>(B1) * neg_pow10<E1>::value);
   static constexpr float beta2 = static_cast<float>(static_cast<double>(B2) * neg_pow10<E2>::value);
   static constexpr float eps = static_cast<float>(static_cast<double>(C) * neg_pow10<E3>::value);
-#if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+
+#ifdef X64_SIMD_AVAILABLE
+
+#if (defined(__GNUC__) || defined(__clang__))
   __attribute__((target("avx2,fma")))
 #endif
   void RunSimdAVX2(
@@ -24,9 +27,6 @@ private:
     float const learning_rate,
     uint64_t const time_step) const 
   {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_X64)
-    return;
-#else
     static constexpr size_t SIMDW = 8;
     static __m256 const vec_beta1 = _mm256_set1_ps(beta1);
     static __m256 const vec_beta2 = _mm256_set1_ps(beta2);
@@ -118,9 +118,10 @@ private:
       (*v)[i] = (*v)[i] * beta2 + (1.f - beta2) * (*g)[i] * (*g)[i];
       (*w)[i] -= learning_rate * (((*m)[i] / bias_m) / (std::sqrt((*v)[i] / bias_v) + eps));
     }
-#endif
   };
-  void RunSimdNone(
+#endif
+
+    void RunSimdNone(
     std::valarray<float>* g,
     std::valarray<float>* m,
     std::valarray<float>* v,
@@ -149,9 +150,13 @@ public:
     float const learning_rate,
     uint64_t const time_step) const
   {
-    if constexpr (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512)
+    if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512) {
+#ifdef X64_SIMD_AVAILABLE
       RunSimdAVX2(g, m, v, w, learning_rate, time_step);
-    else
+#endif
+    }
+    else {
       RunSimdNone(g, m, v, w, learning_rate, time_step);
+    }
   }
 };

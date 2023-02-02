@@ -1,5 +1,8 @@
 #include "SimdMixer.hpp"
 
+#include "BitCount.hpp"
+#include "Squash.hpp"
+
 //the compiler needs to see these implementations for inlining + optimization
 #include "MixerFunctions_SIMD_None.hpp"
 #include "MixerFunctions_SIMD_SSE2.hpp"
@@ -137,6 +140,7 @@ void SIMDMixer<simd>::update() {
       if (simd == SIMDType::SIMD_NONE) {
         trainSimdNone(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
       }
+#ifdef X64_SIMD_AVAILABLE
       else if (simd == SIMDType::SIMD_SSE2) {
         trainSimdSse2(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
       }
@@ -146,9 +150,12 @@ void SIMDMixer<simd>::update() {
       else if (simd == SIMDType::SIMD_AVX512) {
         trainSimdAvx512(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
       }
+#endif
+#ifdef ARM_NEON_AVAILABLE
       else if (simd == SIMDType::SIMD_NEON) {
         trainSimdNeon(&tx[0], &wx[cxt[i] * n], nx, (err * rate) >> 16);
       }
+#endif
       else {
         static_assert("Unknown SIMD parameter");
       }
@@ -175,6 +182,7 @@ int SIMDMixer<simd>::p() {
       if (simd == SIMDType::SIMD_NONE) {
         dp = dotProductSimdNone(&tx[0], &wx[cxt[i] * n], nx);
       }
+#ifdef X64_SIMD_AVAILABLE
       else if (simd == SIMDType::SIMD_SSE2) {
         dp = dotProductSimdSse2(&tx[0], &wx[cxt[i] * n], nx);
       }
@@ -184,9 +192,12 @@ int SIMDMixer<simd>::p() {
       else if (simd == SIMDType::SIMD_AVX512) {
         dp = dotProductSimdAvx512(&tx[0], &wx[cxt[i] * n], nx);
       }
+#endif
+#ifdef ARM_NEON_AVAILABLE
       else if (simd == SIMDType::SIMD_NEON) {
         dp = dotProductSimdNeon(&tx[0], &wx[cxt[i] * n], nx);
       }
+#endif
       else {
         static_assert("Unknown SIMD parameter");
       }
@@ -200,6 +211,7 @@ int SIMDMixer<simd>::p() {
     if (simd == SIMDType::SIMD_NONE) {
       dp = dotProductSimdNone(&tx[0], &wx[cxt[0] * n], nx);
     }
+#ifdef X64_SIMD_AVAILABLE
     else if (simd == SIMDType::SIMD_SSE2) {
       dp = dotProductSimdSse2(&tx[0], &wx[cxt[0] * n], nx);
     }
@@ -209,9 +221,12 @@ int SIMDMixer<simd>::p() {
     else if (simd == SIMDType::SIMD_AVX512) {
       dp = dotProductSimdAvx512(&tx[0], &wx[cxt[0] * n], nx);
     }
+#endif
+#ifdef ARM_NEON_AVAILABLE
     else if (simd == SIMDType::SIMD_NEON) {
       dp = dotProductSimdNeon(&tx[0], &wx[cxt[0] * n], nx);
     }
+#endif
     else {
       static_assert("Unknown SIMD parameter");
     }
@@ -219,3 +234,13 @@ int SIMDMixer<simd>::p() {
     return pr[0] = squash(dp);
   }
 }
+
+template class SIMDMixer<SIMDType::SIMD_NONE>;
+#ifdef X64_SIMD_AVAILABLE
+template class SIMDMixer<SIMDType::SIMD_SSE2>;
+template class SIMDMixer<SIMDType::SIMD_AVX2>;
+template class SIMDMixer<SIMDType::SIMD_AVX512>;
+#endif
+#ifdef ARM_NEON_AVAILABLE
+template class SIMDMixer<SIMDType::SIMD_NEON>;
+#endif

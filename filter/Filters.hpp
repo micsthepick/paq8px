@@ -341,6 +341,7 @@ static DetectionInfo detect(File *in, uint64_t blockSize, const TransformOptions
   uint64_t sof = 0; // Start Of Frame
   uint64_t sos = 0; // Start Of Scan
   uint64_t app = 0; // Application-specific marker
+  uint64_t firstSoi = 0;
 
   // For WAVE detection
   uint64_t wavi = 0;
@@ -800,17 +801,18 @@ static DetectionInfo detect(File *in, uint64_t blockSize, const TransformOptions
       }
       if ((sof != 0) && sof > soi && i - sof < 0x1000 && (buf0 & 0xffff) == 0xffda) {
         sos = i;
-        if (detectionInfo.Type != BlockType::JPEG) {
-          detectionInfo.Type = BlockType::JPEG;
-          detectionInfo.DataStart = start + soi - 3;
+        if (firstSoi == 0) {
+          firstSoi = soi;
         }
       }
-      if (i - soi > 0x40000 && (sos == 0)) {
+      if (i - soi > 0x40000 && (sos == 0)) { // fail
         soi = 0;
       }
     }
-    if (detectionInfo.Type == BlockType::JPEG && (sos != 0) && i > sos && (buf0 & 0xff00) == 0xff00 && (buf0 & 0xff) != 0 && (buf0 & 0xf8) != 0xd0) {
-      detectionInfo.DataLength = start + i +1 - detectionInfo.DataStart;
+    if (firstSoi != 0 && (sos != 0) && i > sos && (buf0 & 0xff00) == 0xff00 && (buf0 & 0xff) != 0 && (buf0 & 0xf8) != 0xd0) {
+      detectionInfo.Type = BlockType::JPEG;
+      detectionInfo.DataStart = start + (firstSoi - 3);
+      detectionInfo.DataLength = i + 1 - (firstSoi - 3);
       return detectionInfo;
     }
 

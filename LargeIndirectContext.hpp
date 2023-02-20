@@ -30,11 +30,11 @@ LargeIndirectContext(const int hashBits, const int inputBits) :
 
   void set(const uint64_t contextHash, const uint8_t c) {
     assert(c < (1 << inputBits));
-    uint32_t* ptr = data[finalize64(contextHash, hashBits)].find(checksum16(contextHash, hashBits), nullptr);
+    T* ptr = data[finalize64(contextHash, hashBits)].find(checksum16(contextHash, hashBits), nullptr);
     *ptr = (*ptr) << inputBits | c;
   };
 
-  uint32_t get(const uint64_t contextHash) {
+  T get(const uint64_t contextHash) {
     return *data[finalize64(contextHash, hashBits)].find(checksum16(contextHash, hashBits), nullptr);
   };
 

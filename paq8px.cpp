@@ -8,8 +8,8 @@
 //////////////////////// Versioning ////////////////////////////////////////
 
 #define PROGNAME     "paq8px"
-#define PROGVERSION  "207fix1-preview"  //update version here before publishing your changes
-#define PROGYEAR     "2022"
+#define PROGVERSION  "208"  //update version here before publishing your changes
+#define PROGYEAR     "2023"
 
 
 #include "Utils.hpp"
@@ -48,13 +48,15 @@ static void printHelp() {
          "      will be used for both compression and decompression.\n"
          "\n"
          "      -0 = no compression, only transformations when applicable (uses 146 MB)\n"
-         "      -1 -2 -3 = compress using less memory (519, 534, 563 MB)\n"
-         "      -4 -5 -6 -7 -8 -9 = use more memory (621, 737, 970, 1436, 2368, 4231 MB)\n"
-         "      -10  -11  -12     = use even more memory (7958, 15412, 29295 MB)\n"
+         "      -1 -2 -3 = compress using less memory (529, 543, 572 MB)\n"
+         "      -4 -5 -6 -7 -8 -9 = use more memory (630, 747, 980, 1446, 2377, 4241 MB)\n"
+         "      -10  -11  -12     = use even more memory (7968, 15421, 29305 MB)\n"
          "\n"
          "      The above listed memory requirements are indicative, actual usage may vary\n"
          "      depending on several factors including need for temporary files,\n"
-         "      temporary memory needs of some preprocessing (transformations), etc.\n"
+         "      temporary memory needs of some preprocessing (transformations),\n"
+         "      and whether special models (audio, image, jpeg, LSTM) are in use or not.\n" 
+         "      Note: memory use of the LSTM model is not included/reported.\n"
          "\n"
          "\n"
          "    Optional compression SWITCHES:\n"

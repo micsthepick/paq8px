@@ -1987,3 +1987,24 @@ paq8px_v207 by Zoltán Gotthardt
 - Added 2 WordModel (linemodel) contexts targeting structured text files with re-occuring line content such as silesia/nci; Tuned other WordModel (linemodel) contexts; Using the RecordLength as LineLength to boost wordmodel (linemodel) performance for DBase and DEC-Alpha content.
 - Use a separate LSTM model for each main context type.
 - Other cosmetic changes.
+
+
+paq8px_v208 by Zoltán Gotthardt
+2023.02.22
+- Detection-related changes
+  - Fixed tar detection for cantrbry.tar and samba/skeleton (reported by kaitz).
+  - Added -forcetext command line option; renamed -skipdetection to -forcebinary (requested by xinix).
+  - Added special detection for calgary/pic.
+  - Fixed 'detection didn't finish properly' with partial JPEG files (reported by Nuon).
+- Modelling-related changes
+  - Enhanced 1-bit image model.
+  - Excluded 6 contexts from IndirectModel, added 5 indirect contexts to WordModel for TEXT blocks.
+- Refactoring, cosmetics, speed optimization
+  - Fixed "warning: writing 1 byte into a region of size 0" in ContextMap
+  - AVX512 detection by Pavel Rosický
+  - Utilizing AVX512BW neural network functions in Mixer when available.
+  - Refactoring: moved SIMD mixer functions to separate code files; small speed-optimization
+  - Refactoring: simplified/centralized preprocessor directives to detect target platform
+  - Fixed detection and compilation issue on ARM and unknown platforms (reported by Moisés Cardona)
+  - Fixed LargeIndirectContext to work with non-32bit histories.
+  - Fixed ContextMap2 behavior when skipping RunStats or ByteHistory contexts.

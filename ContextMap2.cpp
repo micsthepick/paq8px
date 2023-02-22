@@ -244,6 +244,9 @@ void ContextMap2::mix(Mixer &m) {
           m.add(0);
         }
       }
+      else if ((contextflagsAll & CM_USE_RUN_STATS) != 0) {
+        runMap.skip(i);
+      }
       // predict from bit context
       if( state == 0 ) {
         stateMap.skip(i);
@@ -269,7 +272,7 @@ void ContextMap2::mix(Mixer &m) {
           (((slot0->byte2 >> (7 - bpos)) & 1) << 1) |
           (((slot0->byte3 >> (7 - bpos)) & 1) << 2);
 
-        int bhState = 0; // 4 bit
+        int bhState = 0; // 4 bits
         if( complete3 ) {
           bhState = 8 | (bhBits); //we have seen 3 bytes (at least)
         } else if( complete2 ) {
@@ -283,22 +286,32 @@ void ContextMap2::mix(Mixer &m) {
         m.add(stretch(bhMap8B.p2(i, bitIsUncertain << 7 | (bhState << 3) | bpos)) >> 2); // using bitIsUncertain is generally beneficial except for some 8bpp image (noticeable loss)
         m.add(stretch(bhMap12B.p2(i, stateGroup << 7 | (bhState << 3) | bpos)) >> 2);
       }
-    } else { //skipped context
-      if((contextInfo->flags & CM_USE_RUN_STATS) != 0 ) {
-        runMap.skip(i);
-        m.add(0);
-      }
-      if((contextInfo->flags & CM_USE_BYTE_HISTORY) != 0 ) {
+      else if ((contextflagsAll & CM_USE_BYTE_HISTORY) != 0) {
         bhMap8B.skip(i);
-        m.add(0);
         bhMap12B.skip(i);
-        m.add(0);
       }
+    } else { //skipped context
+
       stateMap.skip(i);
       m.add(0);
       m.add(0);
       m.add(0);
       m.add(0);
+
+      if((contextflagsAll & CM_USE_RUN_STATS) != 0) {
+        runMap.skip(i);
+        if((contextInfo->flags & CM_USE_RUN_STATS) != 0)
+          m.add(0);
+      }
+
+      if((contextflagsAll & CM_USE_BYTE_HISTORY) != 0 ) {
+        bhMap8B.skip(i);
+        bhMap12B.skip(i);
+        if ((contextInfo->flags & CM_USE_BYTE_HISTORY) != 0) {
+          m.add(0);
+          m.add(0);
+        }
+      }
     }
   }
 }

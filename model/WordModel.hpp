@@ -14,17 +14,18 @@
 class WordModel {
 private:
   static constexpr int nCM1 = WordModelInfo::nCM1; // pdf / non_pdf contexts
-  static constexpr int nCM2_TEXT = WordModelInfo::nCM2_TEXT; // 58
-  static constexpr int nCM2_BIN = WordModelInfo::nCM2_BIN; // 49
+  static constexpr int nCM2_TEXT = WordModelInfo::nCM2_TEXT; // 46
+  static constexpr int nCM2_BIN = WordModelInfo::nCM2_BIN; // 32
 public:
-  static constexpr int MIXERINPUTS_TEXT = (nCM1 + nCM2_TEXT) *(ContextMap2::MIXERINPUTS + ContextMap2::MIXERINPUTS_RUN_STATS + ContextMap2::MIXERINPUTS_BYTE_HISTORY); // 406
-  static constexpr int MIXERINPUTS_BIN = (nCM1 + nCM2_BIN) * (ContextMap2::MIXERINPUTS + ContextMap2::MIXERINPUTS_RUN_STATS + ContextMap2::MIXERINPUTS_BYTE_HISTORY); // 343
+  static constexpr int MIXERINPUTS_TEXT = (nCM1 + nCM2_TEXT) *(ContextMap2::MIXERINPUTS + ContextMap2::MIXERINPUTS_RUN_STATS + ContextMap2::MIXERINPUTS_BYTE_HISTORY); // 462
+  static constexpr int MIXERINPUTS_BIN = (nCM1 + nCM2_BIN) * (ContextMap2::MIXERINPUTS + ContextMap2::MIXERINPUTS_RUN_STATS + ContextMap2::MIXERINPUTS_BYTE_HISTORY); // 371
   static constexpr int MIXERCONTEXTS = 16 * 8;
   static constexpr int MIXERCONTEXTSETS = 1;
 
 private:
   Shared * const shared;
   ContextMap2 cm;
+  LargeIndirectContext<uint16_t> iCtxLarge;
   WordModelInfo infoNormal; //used for general content
   WordModelInfo infoPdf; //used only in case of pdf text - in place of infoNormal
   uint8_t pdfTextParserState; // 0..7

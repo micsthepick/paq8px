@@ -15,8 +15,8 @@ void IndirectModel::mix(Mixer &m) {
     //current contexts
     uint32_t c1 = c4 & 0xff; //8 bits
     uint32_t d2 = c4 & 0xffff; //16 bits
-    uint32_t d3 = (buf(1) >> 3) | (buf(2) >> 3) << 5 | (buf(3) >> 3) << 10; //15 bits
-    uint32_t d4 = (buf(1) >> 4) | (buf(2) >> 4) << 4 | (buf(3) >> 4) << 8 | (buf(4) >> 4) << 12; //16 bits
+    uint32_t d3 = (buf(1) >> 3) | (buf(2) >> 3) << 5 | (buf(3) >> 3) << 10; //15 bits (top 5 bits from last 3 bytes)
+    uint32_t d4 = (buf(1) >> 4) | (buf(2) >> 4) << 4 | (buf(3) >> 4) << 8 | (buf(4) >> 4) << 12; //16 bits (top 4 bits from last 4 bytes)
 
     //... and their byte histories
     const uint32_t h1 = c1 | t1[c1] << 8;
@@ -35,25 +35,30 @@ void IndirectModel::mix(Mixer &m) {
     r4 = r4 << 8 | c1;
 
     const uint8_t R_ = CM_USE_RUN_STATS; 
-    uint64_t i = 0;
 
-    
-    cm.set(R_,hash(++i, h1));              // last 1 byte + 3 history bytes {in a 1-byte context}
+    BlockType blockType = shared->State.blockType;
+
+    const bool isTextBlock = isTEXT(blockType);
+    uint64_t i = ((int)blockType) * 1024;
+
+    cm.set(R_, hash(++i, h1));              // last 1 byte + 3 history bytes {in a 1-byte context}
     cm.set(R_, hash(++i, h1 & 0xffffff00)); // 3 history bytes {in a 1-byte context}
     cm.set(R_, hash(++i, t1[c1]));          // 4 history bytes {in a 1-byte context}
     cm.set(R_, hash(++i, h2));              // last 2 bytes + 2 history bytes {in a 2-byte context}
-    cm.set(R_, hash(++i, h3));              // last 3 top 5 bits + 2 history bytes {in a "last 3 top 5 bits" context}
     cm.set(R_, hash(++i, h4));              // last 4 top 4 bits + 2 history bytes {in a "last 4 top 4 bits" context}
-    
-    cm.set(R_, hash(++i, h1 & 0x0000ff00)); // 1 history byte {in a 1-byte context}
-    cm.set(R_, hash(++i, h2 & 0x00ff0000)); // 1 history byte {in a 2-byte context}
-    cm.set(R_, hash(++i, h3 & 0x00ff0000)); // last 3 top 5 bits + 2 history bytes {in a "last 3 top 5 bits" context}
-    cm.set(R_, hash(++i, h4 & 0x00ff0000)); // last 4 top 4 bits + 2 history bytes {in a "last 4 top 4 bits" context}
-   
+
     cm.set(R_, hash(++i, h1 & 0x0000ffff)); // last byte + 1 history byte {in a 1-byte context}
+    cm.set(R_, hash(++i, h2 & 0x00ff0000)); // 1 history byte {in a 2-byte context}
     cm.set(R_, hash(++i, h2 & 0x00ffffff)); // last 2 bytes + 1 history byte {in a 2-byte context}
-    cm.set(R_, hash(++i, h3 & 0x00ffffff)); // last 3 top 5 bits + 1 history byte {in a "last 3 top 5 bits" context}
-    cm.set(R_, hash(++i, h4 & 0x00ffffff)); // last 4 top 4 bits + 1 history byte {in a "last 4 top 4 bits" context}
+
+    if (!isTextBlock) {
+      cm.set(R_, hash(++i, h1 & 0x0000ff00)); // 1 history byte {in a 1-byte context}
+      cm.set(R_, hash(++i, h3));              // last 3 top 5 bits + 2 history bytes {in a "last 3 top 5 bits" context}
+      cm.set(R_, hash(++i, h3 & 0x00ff0000)); // 1 history byte {in a "last 3 top 5 bits" context}
+      cm.set(R_, hash(++i, h3 & 0x00ffffff)); // last 3 top 5 bits + 1 history byte {in a "last 3 top 5 bits" context}
+      cm.set(R_, hash(++i, h4 & 0x00ff0000)); // 1 history byte {in a "last 4 top 4 bits" context}
+      cm.set(R_, hash(++i, h4 & 0x00ffffff)); // last 4 top 4 bits + 1 history byte {in a "last 4 top 4 bits" context}
+    }
 
     // context with 2 characters converted to lowercase (context table: t5, byte history: h5)
 
@@ -96,7 +101,7 @@ void IndirectModel::mix(Mixer &m) {
     cm.set(R_, hash(++i, h6 & 0xffff, context & 0xff));
     cm.set(R_, hash(++i, h6));
 
-    assert(i == nCM);
+    assert(i - ((int)blockType) * 1024 == (isTextBlock ? nCM_TEXT : nCM));
   }
   cm.mix(m);
 }

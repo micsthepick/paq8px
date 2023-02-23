@@ -33,7 +33,7 @@ uint32_t ilog2(uint32_t x) {
     _BitScanReverse(&tmp, x);
   }
   return tmp;
-#elif __GNUC__
+#elif (defined(__GNUC__) || defined(__clang__))
   if (x != 0) {
     x = 31 - __builtin_clz(x);
   }

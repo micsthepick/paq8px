@@ -8,8 +8,8 @@
 //////////////////////// Versioning ////////////////////////////////////////
 
 #define PROGNAME     "paq8px"
-#define PROGVERSION  "207"  //update version here before publishing your changes
-#define PROGYEAR     "2022"
+#define PROGVERSION  "208"  //update version here before publishing your changes
+#define PROGYEAR     "2023"
 
 
 #include "Utils.hpp"
@@ -48,13 +48,15 @@ static void printHelp() {
          "      will be used for both compression and decompression.\n"
          "\n"
          "      -0 = no compression, only transformations when applicable (uses 146 MB)\n"
-         "      -1 -2 -3 = compress using less memory (519, 534, 563 MB)\n"
-         "      -4 -5 -6 -7 -8 -9 = use more memory (621, 737, 970, 1436, 2368, 4231 MB)\n"
-         "      -10  -11  -12     = use even more memory (7958, 15412, 29295 MB)\n"
+         "      -1 -2 -3 = compress using less memory (529, 543, 572 MB)\n"
+         "      -4 -5 -6 -7 -8 -9 = use more memory (630, 747, 980, 1446, 2377, 4241 MB)\n"
+         "      -10  -11  -12     = use even more memory (7968, 15421, 29305 MB)\n"
          "\n"
          "      The above listed memory requirements are indicative, actual usage may vary\n"
          "      depending on several factors including need for temporary files,\n"
-         "      temporary memory needs of some preprocessing (transformations), etc.\n"
+         "      temporary memory needs of some preprocessing (transformations),\n"
+         "      and whether special models (audio, image, jpeg, LSTM) are in use or not.\n" 
+         "      Note: memory use of the LSTM model is not included/reported.\n"
          "\n"
          "\n"
          "    Optional compression SWITCHES:\n"
@@ -131,10 +133,15 @@ static void printHelp() {
          "\n"
          "Additional optional switches:\n"
          "\n"
-         "    -skipdetection\n"
-         "    Skip block detection, use generic model set only.\n" 
+         "    -forcebinary\n"
+         "    Skip block detection, use the DEFAULT (binary aka generic) model set only.\n" 
          "    It helps when block detection would find false positives in a file with purely binary content.\n"
          "\n"
+         "\n"
+         "    -forcetext\n"
+         "    Skip block detection, use the TEXT model set only.\n" 
+         "    It helps when block detection would detect the file as DEFAULT with text-like content.\n"
+         "\n"        
          "\n"
          "    -v\n"
          "    Print more detailed (verbose) information to screen.\n"
@@ -143,7 +150,7 @@ static void printHelp() {
          "    Logs (appends) compression results in the specified tab separated LOGFILE.\n"
          "    Logging is only applicable for compression.\n"
          "\n"
-         "    -simd [NONE|SSE2|SSSE3|AVX2|AVX512|NEON]\n"
+         "    -simd [NONE|SSE2|AVX2|AVX512|NEON]\n"
          "    Overrides detected SIMD instruction set for neural network operations\n"
          "\n"
          "\n"
@@ -173,7 +180,7 @@ static void printSimdInfo(int simdIset, int detectedSimdIset) {
   if( detectedSimdIset < 0 || detectedSimdIset > 11 ) {
     quit("Oops, sorry. Unexpected result.");
   }
-  static const char *vectorizationString[12] = {"none", "MMX", "SSE", "SSE2", "SSE3", "SSSE3", "SSE4.1", "SSE4.2", "AVX", "AVX2", "AVX512", "NEON"};
+  static const char *vectorizationString[12] = {"none", "MMX", "SSE", "SSE2", "SSE3", "SSSE3", "SSE4.1", "SSE4.2", "AVX", "AVX2", "AVX512", "ARM Neon"};
   printf("%s.\n", vectorizationString[detectedSimdIset]);
 
   printf("Using ");
@@ -183,8 +190,6 @@ static void printSimdInfo(int simdIset, int detectedSimdIset) {
     printf("AVX512");
   } else if( simdIset >= 9 ) {
     printf("AVX2");
-  } else if (simdIset >= 5) {
-    printf("SSE2 & SSSE3");
   } else if( simdIset >= 3 ) {
     printf("SSE2");
   } else {
@@ -333,12 +338,14 @@ int processCommandLine(int argc, char **argv) {
             quit("The -log switch requires a filename.");
           }
           logfile += argv[i];
-        } else if( strcasecmp(argv[i], "-skipdetection") == 0 ) {
-          shared.SetOptionSkipBlockDetection();
+        } else if( strcasecmp(argv[i], "-forcebinary") == 0 ) {
+          shared.SetOptionDetectBlockAsBinary();
+        } else if( strcasecmp(argv[i], "-forcetext") == 0 ) {
+          shared.SetOptionDetectBlockAsText();
         }
         else if( strcasecmp(argv[i], "-simd") == 0 ) {
           if( ++i == argc ) {
-            quit("The -simd switch requires an instruction set name (NONE,SSE2,SSSE3, AVX2, NEON).");
+            quit("The -simd switch requires an instruction set name (NONE, SSE2, AVX2, AVX512, NEON).");
           }
           if( strcasecmp(argv[i], "NONE") == 0 ) {
             simdIset = 0;
@@ -353,7 +360,7 @@ int processCommandLine(int argc, char **argv) {
          } else if (strcasecmp(argv[i], "NEON") == 0) {
             simdIset = 11;
           } else {
-            quit("Invalid -simd option. Use -simd NONE, -simd SSE2, -simd SSSE3, -simd AVX2, -simd AVX512 or -simd NEON.");
+            quit("Invalid -simd option. Use -simd NONE, -simd SSE2, -simd AVX2, -simd AVX512 or -simd NEON.");
           }
         } else {
           printf("Invalid command: %s", argv[i]);
@@ -381,9 +388,6 @@ int processCommandLine(int argc, char **argv) {
     if( simdIset == -1 ) {
       simdIset = detectedSimdIset;
     }
-    if( simdIset > detectedSimdIset ) {
-      printf("\nOverriding system highest vectorization support. Expect a crash.");
-    }
 
     // Print anything only if the user wants/needs to know
     if( verbose || simdIset != detectedSimdIset ) {
@@ -397,12 +401,25 @@ int processCommandLine(int argc, char **argv) {
       shared.chosenSimd = SIMDType::SIMD_AVX512;
     } else if (simdIset >= 9) {
       shared.chosenSimd = SIMDType::SIMD_AVX2;
-    } else if (simdIset >= 5) {
-      shared.chosenSimd = SIMDType::SIMD_SSSE3;
     } else if( simdIset >= 3 ) {
       shared.chosenSimd = SIMDType::SIMD_SSE2;
     } else {
       shared.chosenSimd = SIMDType::SIMD_NONE;
+    }
+
+    if (!IS_ARM_NEON_AVAILABLE && shared.chosenSimd == SIMDType::SIMD_NEON) {
+      quit("The ARM Neon instruction set is not available on this platform.");
+    }
+    if (!IS_X64_SIMD_AVAILABLE && (
+      shared.chosenSimd == SIMDType::SIMD_SSE2 ||
+      shared.chosenSimd == SIMDType::SIMD_AVX2 ||
+      shared.chosenSimd == SIMDType::SIMD_AVX512
+      )) {
+      quit("The x64 SIMD instruction set is not available on this platform.");
+    }
+
+    if (simdIset > detectedSimdIset) {
+      printf("\nOverriding system highest vectorization support. Expect a crash.");
     }
 
     if( verbose ) {

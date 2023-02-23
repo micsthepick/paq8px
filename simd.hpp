@@ -2,25 +2,27 @@
 
 ///////////////////////// SIMD Vectorization detection //////////////////////////////////
 
-//define CPUID
-#if defined(__GNUC__) || defined(__clang__)
-#if !defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON)
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+#define HAS_CPUID 1
+#endif
+
+#ifdef HAS_CPUID
+#if defined(_MSC_VER)
+#include <intrin.h>
+#define cpuid(info, x) __cpuidex(info, x, 0)
+#elif defined(__GNUC__) || defined(__clang__)
 #include <x86intrin.h>
 #include <cpuid.h>
 #define cpuid(info, x) __cpuid_count(x, 0, (info)[0], (info)[1], (info)[2], (info)[3])
 #endif
-#elif defined(_MSC_VER)
-#include <immintrin.h>
-#define cpuid(info, x) __cpuidex(info, x, 0)
-#else
-#error Unknown compiler
 #endif
 
 // Define interface to xgetbv instruction
+#ifdef HAS_CPUID
 static inline unsigned long long xgetbv(unsigned long ctr) {
 #if (defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 160040000) || (defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1200)
   return _xgetbv(ctr);
-#elif defined(__GNUC__)
+#elif (defined(__GNUC__) || defined(__clang__))
   uint32_t a = 0;
   uint32_t d;
   __asm("xgetbv"
@@ -32,9 +34,10 @@ static inline unsigned long long xgetbv(unsigned long ctr) {
 #error Unknown compiler
 #endif
 }
+#endif
 
 /* Returns system's highest supported SIMD instruction set as
-0: none
+0: none (or unknown)
 1: MMX
 2: SSE
 3: SSE2
@@ -49,9 +52,7 @@ static inline unsigned long long xgetbv(unsigned long ctr) {
 11: NEON
 */
 static int simdDetect() {
-#if defined(__ARM_FEATURE_SIMD32) || defined(__ARM_NEON)
-  return 11;
-#else
+#ifdef HAS_CPUID
   int cpuidResult[4] = {0, 0, 0, 0};
   cpuid(cpuidResult, 0); // call cpuid function 0 ("Get vendor ID and highest basic calling parameter")
   if( cpuidResult[0] == 0 ) {
@@ -105,5 +106,9 @@ static int simdDetect() {
   }
   //AVX512: OK
   return 10;
+#elif defined(ARM_NEON_AVAILABLE)
+  return 11;
+#else
+  return 0; //unknown system - use non-accelerated codepaths
 #endif
 }

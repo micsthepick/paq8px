@@ -3,13 +3,11 @@
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
+#include <math.h>
 
 #include "cstdint"
-#if defined(__i386__) || defined(__x86_64__) || defined(_M_X64)
-#include <xmmintrin.h>
-#elif defined(__ARM_FEATURE_SIMD32) || defined(__ARM_NEON)
-#include <arm_neon.h>
-#endif
+
+#include "SystemDefines.hpp"
 
 /**
  * Least Mean Squares predictor
@@ -55,10 +53,12 @@ public:
   }
 
   float rsqrt(const float x) {
-#if defined(__ARM_FEATURE_SIMD32) || defined(__ARM_NEON)
+#if defined(ARM_NEON_AVAILABLE)
     float r = vgetq_lane_f32(vrsqrteq_f32(vdupq_n_f32(x)), 0); //NEON
-#else
+#elif defined(X64_SIMD_AVAILABLE)
     float r = _mm_cvtss_f32(_mm_rsqrt_ss(_mm_set_ss(x))); //SSE
+#else
+    float r = 1.0f / sqrt(x);
 #endif
     return (0.5F * (r + 1.0F / (x * r)));
   }

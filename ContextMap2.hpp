@@ -45,8 +45,8 @@ public:
 private:
 
   struct ContextInfo {
-    HashElementForContextMap* slot0; /**< pointer to current byte history in slot0 */
-    HashElementForContextMap* slot012; /**< pointer to current bit history states in current slot (either slot0 or slot1 or slot2) */
+    HashElementForContextMap* hashElementInSlot0; /**< pointer to current bit history states, byte history and byte run statistics in slot0 */
+    HashElementForContextMap* hashElementInSlot012; /**< pointer to current bit history states in current slot (either slot0 or slot1 or slot2) */
     uint32_t tableIndex; /**< @ref C whole byte context hashes */
     uint16_t tableChecksum; /**< @ref C whole byte context checksums */
     uint8_t flags;

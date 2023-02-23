@@ -2,6 +2,7 @@
 
 #include "../Shared.hpp"
 #include "../ContextMap2.hpp"
+#include "../LargeIndirectContext.hpp"
 #include <cstdint>
 #include <cctype>
 
@@ -17,6 +18,7 @@ private:
   static constexpr int maxLastLetter = 16;
   Shared * const shared;
   ContextMap2 &cm;
+  LargeIndirectContext<uint16_t> &iCtxLarge;
   Array<uint32_t> wordPositions {1 << wPosBits}; /**< last positions of whole words/numbers */
   Array<uint16_t> checksums {1 << wPosBits}; /**< checksums for whole words/numbers */
   uint32_t c4 {}; /**< last 4 processed characters */
@@ -33,7 +35,7 @@ private:
   uint64_t firstWord {}; /**< hash of line content, hash of first word on line */
   uint64_t word0 {}, word1 {}, word2 {}, word3 {}, word4 {}; /**< wordToken hashes, word0 is the partially processed ("current") word */
   uint64_t expr0 {}, expr1 {}, expr2 {}, expr3 {}, expr4 {}; /**< wordToken hashes for expressions */
-  uint64_t keyword0 {}, gapToken0 {}, gapToken1 {}; /**< hashes */
+  uint64_t keyword0 {}, gapToken0 {}, gapToken1 {}, currentToken {}; /**< hashes */
   uint16_t w {}; /**< finalized hash of last partially processed word */
   uint16_t chk {}; /**< checksum of last partially processed word */
   int firstChar {}; /**< category of first character of the current line (or -1 when in first column) */
@@ -46,9 +48,9 @@ private:
 
 public:
   static constexpr int nCM1 = 21; // pdf / non_pdf contexts
-  static constexpr int nCM2_TEXT = 41; // common contexts (text content)
-  static constexpr int nCM2_BIN = 41 - 9; // common contexts (bibnary content)
-  WordModelInfo(Shared* const sh, ContextMap2 &contextmap);
+  static constexpr int nCM2_TEXT = 46; // common contexts (text content)
+  static constexpr int nCM2_BIN = 46 - 13; // common contexts (binary content)
+  WordModelInfo(Shared* const sh, ContextMap2 &contextmap, LargeIndirectContext<uint16_t> &iCtxLarge);
 
   uint32_t fixedLineLength {};
 

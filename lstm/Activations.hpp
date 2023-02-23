@@ -10,13 +10,13 @@ template <SIMDType simd>
 class Tanh :
   public IActivation {
 private:
-#if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+
+#ifdef X64_SIMD_AVAILABLE
+
+#if (defined(__GNUC__) || defined(__clang__))
   __attribute__((target("avx2,fma")))
 #endif
   void RunSimdAVX2(float* f, size_t const len) const {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_X64)
-    return;
-#else
     static constexpr size_t SIMDW = 8;
     __m256 const c1 = _mm256_set1_ps(0.03138777f);
     __m256 const c2 = _mm256_set1_ps(0.276281267f);
@@ -49,12 +49,16 @@ private:
     }
     for (; remainder > 0; remainder--)
       f[len - remainder] = tanha(f[len - remainder]);
-#endif
   }
+#endif
+
 public:
   void Run(float* f, size_t const len) const {
-    if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512)
+    if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512) {
+#ifdef X64_SIMD_AVAILABLE
       RunSimdAVX2(f, len);
+#endif
+    }
     else {
       for (size_t i = 0; i < len; i++)
         f[i] = tanha(f[i]);
@@ -66,13 +70,13 @@ template <SIMDType simd>
 class Logistic :
   public IActivation {
 private:
-#if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+
+#ifdef X64_SIMD_AVAILABLE
+
+#if (defined(__GNUC__) || defined(__clang__))
   __attribute__((target("avx2,fma")))
 #endif
-    void RunSimdAVX2(float* f, size_t const len) const {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_X64)
-    return;
-#else
+  void RunSimdAVX2(float* f, size_t const len) const {
     static constexpr size_t SIMDW = 8;
     static __m256 const c1 = _mm256_set1_ps(0.03138777f);
     static __m256 const c2 = _mm256_set1_ps(0.276281267f);
@@ -113,12 +117,16 @@ private:
     }
     for (; remainder > 0; remainder--)
       f[len - remainder] = (tanha(f[len - remainder] * 0.5f) + 1.0f) * 0.5f;
-#endif
   }
+#endif
+
 public:
   void Run(float* f, size_t const len) const {
-    if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512)
+    if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512) {
+#ifdef X64_SIMD_AVAILABLE
       RunSimdAVX2(f, len);
+#endif
+    }
     else {
       for (size_t i = 0; i < len; i++)
         f[i] = (tanha(f[i] * 0.5f) + 1.0f) * 0.5f;

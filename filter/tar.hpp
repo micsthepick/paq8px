@@ -120,10 +120,17 @@ private:
   //detect tar content
   //a tar file is: hdr+filecontent + hdr+filecontent + etc...
   //this function figures out where each file starts and how long they are
+  //we ignore files in tar having garbage in the padding area
   bool process(File* in, uint64_t maxFilePos) {
     uint64_t sectorStartPos = this->detectedStartPos;
     while (true) {
-      if (sectorStartPos >= maxFilePos)
+      if (sectorStartPos == maxFilePos) {
+        //no empty sectors at the end - that'll be ok
+        //this usually happens when we ignore files in a tar with garbage in the padding area
+        this->detectedEndPos = sectorStartPos;
+        return true;
+      }
+      else if (sectorStartPos > maxFilePos)
         return false; //fail
       in->setpos(sectorStartPos);
       int bytesRead = in->blockRead((uint8_t*)&tarh, sizeof(tarh));
@@ -141,19 +148,41 @@ private:
         this->detectedEndPos = sectorStartPos;
         return true;
       }
-      bool ok0 = tarh.verifyChecksum();
-      bool ok1 = tarh.oct2bin(tarh.uid, sizeof(tarh.uid)) >= 0;
-      bool ok2 = tarh.oct2bin(tarh.gid, sizeof(tarh.gid)) >= 0;
-      bool ok3 = tarh.oct2bin(tarh.size, sizeof(tarh.size)) >= 0;
-      bool ok4 = tarh.oct2bin(tarh.size, sizeof(tarh.typeflag)) >= 0;
-      if (!ok0 || !ok1 || !ok2 || !ok3 || !ok4) {
+      //verify if all fields look octal that should look octal
+      if (!tarh.verifyChecksum())
         return false; //fail
-      }
-      
+      if (tarh.oct2bin(tarh.mode, sizeof(tarh.mode)) < 0)
+        return false; //fail
+      if (tarh.oct2bin(tarh.uid, sizeof(tarh.uid)) < 0)
+        return false; //fail
+      if (tarh.oct2bin(tarh.gid, sizeof(tarh.gid)) < 0)
+        return false; //fail
+      if (tarh.oct2bin(tarh.size, sizeof(tarh.size)) < 0)
+        return false; //fail
+      if (tarh.oct2bin(tarh.mtime, sizeof(tarh.mtime)) < 0)
+        return false; //fail
+      if (tarh.oct2bin(tarh.devmajor, sizeof(tarh.devmajor)) < 0)
+        return false; //fail
+      if (tarh.oct2bin(tarh.devminor, sizeof(tarh.devminor)) < 0)
+        return false; //fail
+
       detectedSectorStartPositions.pushBack(sectorStartPos);
 
-      int fileSize = tarh.oct2bin(tarh.size, 12);
+      int fileSize = tarh.oct2bin(tarh.size, sizeof(tarh.size));
       if (fileSize != 0) {
+        //detect if file is properly padded
+        int filePaddingSize = (512 - (fileSize & 511)) & 511;
+        in->setpos(sectorStartPos + sizeof(TARheader) + fileSize);
+        for (int i = 0; i < filePaddingSize; i++) {
+          int c = in->getchar();
+          if (c != 0) {
+            if (detectedFileStartPositions.size() > 0) {
+              this->detectedEndPos = sectorStartPos;
+              return true; //accept what we have so far (files with proper padding)
+            }
+            return false; //fail, there is not properly padded files so far
+          }
+        }
         detectedFileStartPositions.pushBack(sectorStartPos + sizeof(TARheader));
         detectedFileLengths.pushBack(fileSize);
       }
@@ -304,6 +333,8 @@ public:
         }
       }
     }
+
+    in->setpos(fileDataStartPos);
 
     return p;
   }

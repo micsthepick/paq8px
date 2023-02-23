@@ -28,7 +28,7 @@ void SparseModel::mix(Mixer &m) {
       ctx <<= 1;
       ctx |= (c4 & 0xff) == 0; //zeroes
 
-      cm.set(RH, hash(++i, ctx)); // calgary/obj2, calgary/pic, cantenbury/kennedy.xls, cantenbury/sum, etc.
+      cm.set(RH, hash(++i, ctx)); // calgary/obj2, canterbury/kennedy.xls, canterbury/sum, etc.
 
       //combination of two bytes
       cm.set(RH, hash(++i, buf(1) | buf(6) << 8));

@@ -112,7 +112,7 @@ public:
   }
 
   inline void update(const T val) {
-#ifdef __GNUC__
+#if (defined(__GNUC__) || defined(__clang__))
     if( shared->chosenSimd == SIMDType::SIMD_AVX2 || shared->chosenSimd == SIMDType::SIMD_AVX512 ) {
       updateAVX2(val);
     } else
@@ -122,7 +122,7 @@ public:
     }
   }
 
-#ifdef __GNUC__
+#if (defined(__GNUC__) || defined(__clang__))
 #ifdef __AVX2__
   __attribute__((target("avx2")))
 #endif

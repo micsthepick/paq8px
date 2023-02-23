@@ -12,16 +12,16 @@ void ContextMap::set(const uint64_t cx) {
   assert(cn >= 0 && cn < C);
   const uint32_t ctx = cxt[cn] = finalize64(cx, hashBits);
   const uint16_t checksum = chk[cn] = checksum16(cx, hashBits);
-  uint8_t* base = cp[cn] = &t[ctx].find(checksum, &rnd)->bitState;
+  uint8_t* base = cp[cn] = &t[ctx].find(checksum, &rnd)->states[0];
   runP[cn] = base + 3;
   // update pending bit histories for bits 2-7
   if( base[3] == 2 ) {
     const int c = base[4] + 256;
-    uint8_t *p = &t[(ctx + (c >> 6)) & mask].find(checksum, &rnd)->bitState;
+    uint8_t *p = &t[(ctx + (c >> 6)) & mask].find(checksum, &rnd)->states[0];
     p[0] = 1 + ((c >> 5) & 1);
     p[1 + ((c >> 5) & 1)] = 1 + ((c >> 4) & 1);
     p[3 + ((c >> 4) & 3)] = 1 + ((c >> 3) & 1);
-    p = &t[(ctx + (c >> 3)) & mask].find(checksum, &rnd)->bitState;
+    p = &t[(ctx + (c >> 3)) & mask].find(checksum, &rnd)->states[0];
     p[0] = 1 + ((c >> 2) & 1);
     p[1 + ((c >> 2) & 1)] = 1 + ((c >> 1) & 1);
     p[3 + ((c >> 1) & 3)] = 1 + (c & 1);
@@ -57,7 +57,7 @@ void ContextMap::update() {
       else if( bpos == 2 || bpos == 5 ) {
         const uint16_t checksum = chk[i];
         const uint32_t ctx = cxt[i];
-        cp[i] = &t[(ctx + c0) & mask].find(checksum, &rnd)->bitState;
+        cp[i] = &t[(ctx + c0) & mask].find(checksum, &rnd)->states[0];
       }
       if (bpos==0) {
         // update run count of previous context

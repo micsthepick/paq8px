@@ -3,7 +3,8 @@
 WordModel::WordModel(Shared* const sh, const uint64_t size) : 
   shared(sh),
   cm(sh, size, nCM1 + nCM2_TEXT, 64),
-  infoNormal(sh, cm), infoPdf(sh, cm), pdfTextParserState(0)
+  iCtxLarge(18,8),
+  infoNormal(sh, cm, iCtxLarge), infoPdf(sh, cm, iCtxLarge), pdfTextParserState(0)
 {}
 
 void WordModel::reset() {

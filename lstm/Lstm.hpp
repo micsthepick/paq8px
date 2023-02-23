@@ -172,13 +172,12 @@ private:
   float learning_rate;
   size_t num_cells, horizon, input_size, output_size;
 
-#if (defined(__GNUC__) || defined(__clang__)) && (!defined(__ARM_FEATURE_SIMD32) && !defined(__ARM_NEON))
+#ifdef X64_SIMD_AVAILABLE
+
+#if (defined(__GNUC__) || defined(__clang__))
   __attribute__((target("avx2,fma")))
 #endif
   void SoftMaxSimdAVX2() {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_X64)
-    return;
-#else
     static constexpr size_t SIMDW = 8;
     size_t const limit = output_size & static_cast<size_t>(-static_cast<ptrdiff_t>(SIMDW)), len = hidden.size();
     size_t remainder = output_size & (SIMDW - 1);
@@ -197,8 +196,9 @@ private:
       sum += output[epoch][i];
     }
     output[epoch] /= sum;
-#endif
   }
+#endif // X64_SIMD_AVAILABLE
+
   void SoftMaxSimdNone() {
     for (unsigned int i = 0; i < output_size; ++i)
       output[epoch][i] = expa(SumOfProducts(&hidden[0], &output_layer[epoch][i][0], hidden.size()));
@@ -261,10 +261,14 @@ public:
       }
     }
 
-    if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512)
+    if (simd == SIMDType::SIMD_AVX2 || simd == SIMDType::SIMD_AVX512) {
+#ifdef X64_SIMD_AVAILABLE
       SoftMaxSimdAVX2();
-    else
+#endif
+    }
+    else {
       SoftMaxSimdNone();
+    }
 
     size_t const epoch_ = epoch;
     epoch++;

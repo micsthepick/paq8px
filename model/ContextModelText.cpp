@@ -16,7 +16,7 @@ public:
       MatchModel::MIXERINPUTS + NormalModel::MIXERINPUTS + SparseMatchModel::MIXERINPUTS +
       SparseModel::MIXERINPUTS_TEXT + SparseBitModel::MIXERINPUTS_TEXT + ChartModel::MIXERINPUTS_TEXT +
       RecordModel::MIXERINPUTS + CharGroupModel::MIXERINPUTS +
-      TextModel::MIXERINPUTS + WordModel::MIXERINPUTS_TEXT + IndirectModel::MIXERINPUTS +
+      TextModel::MIXERINPUTS + WordModel::MIXERINPUTS_TEXT + IndirectModel::MIXERINPUTS_TEXT +
       DmcForest::MIXERINPUTS + NestModel::MIXERINPUTS + XMLModel::MIXERINPUTS +
       (useLSTM ? LstmModel<>::MIXERINPUTS : 0)
       ,

@@ -13,6 +13,7 @@
 class IndirectModel {
 private:
   static constexpr int nCM = 27;
+  static constexpr int nCM_TEXT = 27 - 6;
   const Shared * const shared;
   ContextMap2 cm;
   Array<uint32_t> t1 {256}; // 1K
@@ -24,6 +25,7 @@ private:
   uint32_t chars4 {0};
 
 public:
+  static constexpr int MIXERINPUTS_TEXT = nCM_TEXT * (ContextMap2::MIXERINPUTS + ContextMap2::MIXERINPUTS_RUN_STATS); // 115
   static constexpr int MIXERINPUTS = nCM * (ContextMap2::MIXERINPUTS + ContextMap2::MIXERINPUTS_RUN_STATS); // 135
   static constexpr int MIXERCONTEXTS = 0;
   static constexpr int MIXERCONTEXTSETS = 0;

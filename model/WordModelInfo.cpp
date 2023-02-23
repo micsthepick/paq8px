@@ -1,7 +1,7 @@
 #include "WordModelInfo.hpp"
 #include "../CharacterNames.hpp"
 
-WordModelInfo::WordModelInfo(Shared* const sh, ContextMap2 &contextmap) : shared(sh), cm(contextmap) {
+WordModelInfo::WordModelInfo(Shared* const sh, ContextMap2 &contextmap, LargeIndirectContext<uint16_t>& iCtxLarge) : shared(sh), cm(contextmap), iCtxLarge(iCtxLarge) {
   reset();
 }
 
@@ -74,6 +74,10 @@ void WordModelInfo::processChar(const bool isExtendedChar) {
 
   mask2 <<= 8;
 
+  if (isTextBlock) {
+    iCtxLarge.set(currentToken, c);
+  }
+
   if( isLetter || isNumber ) {
     if( wordLen0 == 0 ) { // the beginning of a new word
       if( pC == NEW_LINE && lastLetter == 3 && ppC == '+' ) {
@@ -96,6 +100,7 @@ void WordModelInfo::processChar(const bool isExtendedChar) {
     }
     lastLetter = 0;
     word0 = combine64(word0, c);
+    currentToken = word0;
     w = static_cast<uint16_t>(finalize64(word0, wPosBits));
     chk = checksum16(word0, wPosBits);
     text0 = (text0 << 8 | c) & 0xffffffffff; // last 5 alphanumeric chars (other chars are ignored)
@@ -127,6 +132,7 @@ void WordModelInfo::processChar(const bool isExtendedChar) {
     }
   } else { //it's not a letter/number
     gapToken0 = combine64(gapToken0, isNewline ? static_cast<uint8_t>(SPACE) : c1);
+    currentToken = gapToken0;
     if( isNewline && pC == '+' && isLetterPpC ) {
     } //calgary/book1 hyphenation - don't shift again
     else if( c == '?' || pC == '!' || pC == '.' ) {
@@ -252,7 +258,7 @@ void WordModelInfo::lineModelPredict() {
     firstChar = groups & 0xff;
   }
   INJECT_SHARED_buf
-    const uint8_t cAbove = buf[nl2 + col]; // N
+  const uint8_t cAbove = buf[nl2 + col]; // N
   const uint8_t pCAbove = buf[nl2 + col - 1]; // NW
 
   const bool isNewLineStart = col == 0 && nl2 > 0;
@@ -479,8 +485,17 @@ void WordModelInfo::predict(const uint8_t pdfTextParserState) {
                 (static_cast<uint32_t>(wordLen1 > 3) << 2) |
                 (static_cast<uint32_t>(lastUpper < lastLetter + wordLen1) << 1) |
                 (static_cast<uint32_t>(lastUpper < wordLen0 + wordLen1 + wordGap)))); //weak
+
+    // indirect contexts
+    const uint8_t R_ = CM_USE_RUN_STATS;
+    uint16_t htoken = iCtxLarge.get(currentToken); //2-byte history
+    cm.set(R_, hash(++i, wlWmeMbc << 8 | htoken));
+    cm.set(R_, hash(++i, wlWmeMbc << 8 | (htoken & 0xff), c));
+    cm.set(R_, hash(++i, wlWmeMbc << 8 | (htoken & 0xff), c4 & 0xffff));
+    cm.set(R_, hash(++i, (htoken & 0xff) , (uint32_t)groups, groups >> 32)); // nci
+    cm.set(R_, hash(++i, htoken, (uint32_t)groups));
   } else {
-    i++;
+    i += 6;
   }
 
   assert(int(i) == nCM2_TEXT);

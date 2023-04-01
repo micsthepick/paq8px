@@ -1,15 +1,14 @@
 #include "StationaryMap.hpp"
 
-StationaryMap::StationaryMap(const Shared* const sh, const int bitsOfContext, const int inputBits, const int scale, const int rate) : 
+StationaryMap::StationaryMap(const Shared* const sh, const int bitsOfContext, const int inputBits, const int scale) : 
   shared(sh),
   data((UINT64_C(1) << bitsOfContext) * ((UINT64_C(1) << inputBits) - 1)),
   mask((1 << bitsOfContext) - 1), 
-  stride((1 << inputBits) - 1), bTotal(inputBits), scale(scale), rate(rate),
+  stride((1 << inputBits) - 1), bTotal(inputBits), scale(scale),
   context(0), bCount(0), b(0), cp(nullptr)
 {
   assert(inputBits > 0 && inputBits <= 8);
   assert(bitsOfContext + inputBits <= 24);
-  assert(9 <= rate && rate <= 16); // 9 is just a reasonable lower bound, 16 is a hard bound
 }
 
 void StationaryMap::set(uint32_t ctx) {
@@ -19,10 +18,6 @@ void StationaryMap::set(uint32_t ctx) {
 
 void StationaryMap::setScale(int scale) {
   this->scale = scale;
-}
-
-void StationaryMap::setRate(int rate) {
-  this->rate = rate;
 }
 
 void StationaryMap::reset() {
@@ -41,7 +36,7 @@ void StationaryMap::update() {
 
   n0 += 1 - y;
   n1 += y;
-  int shift = (n0 | n1) >> rate; // shift: 0 or 1
+  int shift = (n0 | n1) >> 16; // shift: 0 or 1
   n0 >>= shift;
   n1 >>= shift;
 

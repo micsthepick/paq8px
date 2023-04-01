@@ -2,7 +2,7 @@
 
 SparseMatchModel::SparseMatchModel(const Shared* const sh, const uint64_t size) : shared(sh), 
   table(size / sizeof(uint32_t)), 
-  mapL {sh,nLSM,17,64,16},  /* LargeStationaryMap: Contexts, HashMaskBits, Scale, AdaptivityRate  */
+  mapL {sh,nLSM,17,64},  /* LargeStationaryMap: Contexts, HashMaskBits, Scale */
   maps{ /* StationaryMap: BitsOfContext, InputBits, Scale=64, Rate=16  */
     {sh,17,4}, {sh,8,1}, {sh,19,1}
   },

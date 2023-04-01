@@ -1,18 +1,16 @@
 #include "LargeStationaryMap.hpp"
 
-LargeStationaryMap::LargeStationaryMap(const Shared* const sh, const int contexts, const int hashBits, const int scale, const int rate) :
+LargeStationaryMap::LargeStationaryMap(const Shared* const sh, const int contexts, const int hashBits, const int scale) :
   shared(sh),
   rnd(),
   data((UINT64_C(1) << hashBits)),
   hashBits(hashBits),
   scale(scale),
-  rate(rate),
   numContexts(contexts),
   currentContextIndex(0),
   contextHashes(contexts) {
   assert(hashBits > 0);
   assert(hashBits <= 24); // 24 is just a reasonable limit for memory use 
-  assert(9 <= rate && rate <= 16); // 9 is just a reasonable lower bound, 16 is a hard bound
   reset();
 }
 
@@ -57,7 +55,7 @@ void LargeStationaryMap::update(uint32_t *cp) {
 
   n0 += 1 - y;
   n1 += y;
-  int shift = (n0 | n1) >> rate; // shift: 0 or 1
+  int shift = (n0 | n1) >> 16; // shift: 0 or 1
   n0 >>= shift;
   n1 >>= shift;
 

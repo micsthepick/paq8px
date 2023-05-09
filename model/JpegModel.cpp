@@ -188,19 +188,43 @@ int JpegModel::mix(Mixer &m) {
 
     // Parse quantization tables
     if( buf(4) == FF && buf(3) == DQT ) {
-      dqtEnd = pos + buf(2) * 256 + buf(1) - 1, dqt_state = 0;
+      dqtEnd = pos + buf(2) * 256 + buf(1) - 1;
+      dqt_state = 0;
+      qNum16b = 0;
+      qNum16 = 0;
     } else if( dqt_state >= 0 ) {
-      if( pos >= dqtEnd ) {
+      if (pos >= dqtEnd) {
         dqt_state = -1;
+      }
+      else if (qNum16 != 0) {
+        if (dqt_state % 65 == 0) {
+          qNum = buf(1); 
+          qNum16b = 0;
+          qNum16 = qNum >> 4; 
+          qNum = qNum & 0xf;
+        }
+        else if ((qNum16b & 1) == 0) {
+          JASSERT(buf(1) > 0);
+          JASSERT(qNum >= 0 && qNum < 4);
+          images[idx].qTable[qNum * 64 + ((dqt_state % 65) - 1)] = buf(1) - 1;
+        }
+        if ((qNum16b & 1) == 0) {
+          dqt_state++;
+        }
+        qNum16b++;
       } else {
         if( dqt_state % 65 == 0 ) {
           qNum = buf(1);
+          qNum16b = 0;
+          qNum16 = qNum >> 4; 
+          qNum = qNum & 0xf;
         } else {
           JASSERT(buf(1) > 0)
           JASSERT(qNum >= 0 && qNum < 4)
           images[idx].qTable[qNum * 64 + ((dqt_state % 65) - 1)] = buf(1) - 1;
         }
         dqt_state++;
+        qNum16b++;
       }
     }
 

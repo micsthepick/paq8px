@@ -141,7 +141,7 @@ private:
 
   //for parsing Quantization tables
   int dqt_state = -1;
-  uint32_t dqtEnd = 0, qNum = 0;
+  uint32_t dqtEnd = 0, qNum = 0, qNum16 = 0, qNum16b = 0;
 
   // context model
   BH<9> t; // context hash -> bit history

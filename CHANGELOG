@@ -2008,3 +2008,9 @@ paq8px_v208 by Zoltán Gotthardt
   - Fixed detection and compilation issue on ARM and unknown platforms (reported by Moisés Cardona)
   - Fixed LargeIndirectContext to work with non-32bit histories.
   - Fixed ContextMap2 behavior when skipping RunStats or ByteHistory contexts.
+
+
+paq8px_v208fix1 by Zoltán Gotthardt
+2023.05.10
+- Cosmetic: Removed unused 'rate' parameter from StationaryMap and LargeStationaryMap.
+- Fixed jpeg model (quantization table parsing).

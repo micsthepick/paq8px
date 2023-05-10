@@ -22,7 +22,7 @@ private:
   Random rnd;
   Array<Bucket16<HashElementForStationaryMap, 7>> data;
   const uint32_t hashBits;
-  int scale, rate;
+  int scale;
 
   const uint32_t numContexts; /**< Maximum supported contexts */
   uint32_t currentContextIndex; /**< Number of context indexes present in cxt array (0..numContexts-1) */
@@ -47,9 +47,8 @@ public:
     *      ...              ...                         ...
     * 
     * @param scale
-    * @param rate use 16 near-stationary modelling (default), smaller values may be used for tuning adaptivity
     */
-  LargeStationaryMap(const Shared* const sh, const int contexts, const int hashBits, const int scale = 64, const int rate = 16);
+  LargeStationaryMap(const Shared* const sh, const int contexts, const int hashBits, const int scale = 64);
 
   /**
     * ctx must be a hash

@@ -1,4 +1,4 @@
-FROM aflplusplus/aflplusplus:dev as fuzzpaq
+FROM aflplusplus/aflplusplus:dev AS fuzzpaq
 
 RUN apt-get update && \
     apt-get -y install --no-install-recommends \

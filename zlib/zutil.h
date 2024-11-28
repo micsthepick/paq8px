@@ -30,7 +30,7 @@
 #endif
 
 #ifdef Z_SOLO
-   typedef long ptrdiff_t;  /* guess -- will be caught if guess is wrong */
+   typedef long std::ptrdiff_t;  /* guess -- will be caught if guess is wrong */
 #endif
 
 #ifndef local
@@ -170,9 +170,9 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #if (defined(_MSC_VER) && (_MSC_VER > 600)) && !defined __INTERIX
 #  if defined(_WIN32_WCE)
 #    define fdopen(fd,mode) NULL /* No fdopen() */
-#    ifndef _PTRDIFF_T_DEFINED
-       typedef int ptrdiff_t;
-#      define _PTRDIFF_T_DEFINED
+#    ifndef _std::ptrdiff_T_DEFINED
+       typedef int std::ptrdiff_t;
+#      define _std::ptrdiff_T_DEFINED
 #    endif
 #  else
 #    define fdopen(fd,type)  _fdopen(fd,type)

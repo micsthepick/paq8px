@@ -11,6 +11,16 @@ int main() {
 
     unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
 
+    FMode fMode = FMode::FDECOMPRESS;
+    Mode mode = Mode::DECOMPRESS;
+    const bool doEncoding = true;
+
+    Shared shared;
+    
+    FileTmp file;
+    
+    TransformOptions transformOptions(&shared);
+
     while (__AFL_LOOP(10000)) {
 
         int len = __AFL_FUZZ_TESTCASE_LEN;  // don't use the macro directly in a
@@ -18,25 +28,15 @@ int main() {
 
         if (len < 8) continue;  // check for a required/useful minimum input length
 
-        //FMode fMode = whattodo == DoExtract ? FMode::FDECOMPRESS : FMode::FCOMPARE;
-        FMode fMode = FMode::FDECOMPRESS;
-
-        Shared shared;
-
-        FileTmp file;
-
         file.blockWrite(__AFL_FUZZ_TESTCASE_BUF, len);
 
-        Encoder en(&file, doEncoding, mode, &archive);
+        Encoder en(&shared, doEncoding, mode, &file);
+        len = Block::DecodeBlockHeader(&en);
 
-        TransformOptions transformOptions(shared);
-
-        //decompressFile(&shared, fName, fMode, en);
-        // decompressRecursive(&f, fileSize, en, fMode, &transformOptions);
         decompressRecursive(&file, len, en, fMode, &transformOptions);
 
         /* Reset state. e.g. libtarget_free(tmp) */
-        file.forgetContentInRam();
+        file.close();
     }
 
     return 0;

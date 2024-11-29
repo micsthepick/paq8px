@@ -4,9 +4,8 @@ project(paq8px)
 find_package(ZLIB)
 
 # hardcode IPO because that seems to be the best way to get fuzzing working
-set(CMAKE_C_FLAGS_DEBUG "-flto=full" CACHE STRING "C compiler flags")
-set(CMAKE_CXX_FLAGS_DEBUG "-stdlib=libc++ -flto=full" CACHE STRING "CXX compiler flags")
-set(CMAKE_EXE_LINKER_FLAGS "-lc++ -lc++abi -lm" CACHE STRING "EXE linker flags")
+set(CMAKE_CXX_FLAGS_INIT "-stdlib=libc++ -flto=full")
+set(CMAKE_C_FLAGS_INIT "-flto=full")
 
 
 option(NATIVECPU "Whether to build for your cpu (vs. the general public)" OFF)

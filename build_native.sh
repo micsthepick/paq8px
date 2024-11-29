@@ -17,6 +17,9 @@ pushd aflbuild
 
 # popd
 
+export CXX_FLAGS="-stdlib=libc++ -flto=full"
+export C_FLAGS="-flto=full"
+
 cp -r ../build ../file .
 rm ./file/FileDisk.cpp
 cp ../stub/DummyFileDisk.cpp ./file/FileDisk.cpp
@@ -25,7 +28,7 @@ cp -r ../filter ../lstm ../model ../text ../zlib ../*.cpp ../*.hpp ../DOC ../pac
 
 mv ./paq8px.cpp ./paq8px.cpp.bak
 sed -r 's/int main\(/static int old_main\(/g' ./paq8px.cpp.bak > ./paq8px-mainless.cpp
-cat ./paq8px-mainless.cpp ./paq8px-persistent.cpp > ./paq8px.cpp || ls && exit 1
+cat ./paq8px-mainless.cpp ./paq8px-persistent.cpp > ./paq8px.cpp
 
 pushd build
 
@@ -33,9 +36,11 @@ cmake \
     -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_CXX_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_LINKER=/usr/local/bin/afl-clang-lto \
-    .. --trace
+    -DCMAKE_C_FLAGS_INIT="$C_FLAGS" \
+    -DCMAKE_CXX_FLAGS_INIT="$CXX_FLAGS" \
+    ..
 
-AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1 make VERBOSE=1 -j 12
+AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1 make -j 12
 
 mv paq8px ../paq8px-san
 make clean
@@ -47,9 +52,9 @@ cmake \
     -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_CXX_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_LINKER=/usr/local/bin/afl-ld-lto \
-    .. --trace
+    ..
 
-make VERBOSE=1 -j 12
+make -j 12
 
 mv paq8px ../paq8px-laf
 make clean
@@ -64,9 +69,9 @@ cmake \
     -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_CXX_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_LINKER=/usr/local/bin/afl-clang-lto \
-    .. --trace
+    ..
 
-make VERBOSE=1 -j 12
+make -j 12
 
 mv paq8px ../paq8px-cmplog
 make clean
@@ -78,9 +83,9 @@ cmake \
     -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_CXX_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_LINKER=/usr/local/bin/afl-ld-lto \
-    .. --trace
+    ..
 
-make VERBOSE=1 -j 12
+make -j 12
 
 mv paq8px ../paq8px-afl
 make clean

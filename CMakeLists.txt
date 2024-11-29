@@ -2,13 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 project(paq8px)
 
 find_package(ZLIB)
-
-# hardcode IPO because that seems to be the best way to get fuzzing working
-# set(CMAKE_CXX_FLAGS_INIT "${CMAKE_CXX_FLAGS_INIT} -stdlib=libc++ -flto=full")
-# set(CMAKE_C_FLAGS_INIT "${CMAKE_C_FLAGS_INIT} -flto=full")
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++ -lm")
-
-
 option(NATIVECPU "Whether to build for your cpu (vs. the general public)" OFF)
 option(DISABLE_ZLIB "Whether to disable zlib" OFF)
 option(NDEBUG "Whether to suppress asserts and array bound checks" ON)
@@ -21,16 +14,12 @@ endif (NATIVECPU)
 
 if (DISABLE_ZLIB)
     add_definitions(-DDISABLE_ZLIB)
-else ()
-    link_directories("/usr/local/zlib/lib")
 endif (DISABLE_ZLIB)
 
 if (NDEBUG)
     add_definitions(-DNDEBUG)
 endif (NDEBUG)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #set(CMAKE_CXX_FLAGS "-O3 -floop-strip-mine -funroll-loops -ftree-vectorize -fgcse-sm -falign-loops=16")
 
 add_executable(paq8px ProgramChecker.cpp paq8px.cpp MTFList.cpp Random.cpp String.cpp Predictor.cpp Models.cpp model/ExeModel.cpp APM1.cpp model/Image1BitModel.cpp model/Image4BitModel.cpp model/SparseModel.cpp Ilog.cpp model/ContextModel.cpp model/ContextModelAudio16.cpp model/ContextModelAudio8.cpp model/ContextModelDec.cpp model/ContextModelGeneric.cpp model/ContextModelImage1.cpp model/ContextModelImage24.cpp model/ContextModelImage4.cpp model/ContextModelImage8.cpp model/ContextModelJpeg.cpp model/ContextModelText.cpp SSE.cpp UpdateBroadcaster.cpp model/Audio8BitModel.cpp Shared.cpp text/TextModel.cpp file/File.cpp file/FileDisk.cpp file/FileName.cpp file/FileTmp.cpp file/ListOfFiles.cpp file/OpenFromMyFolder.cpp model/Audio16BitModel.cpp model/AudioModel.cpp model/CharGroupModel.cpp model/DmcForest.cpp model/DmcModel.cpp model/DmcNode.cpp model/Image24BitModel.cpp model/IndirectModel.cpp model/JpegModel.cpp model/LinearPredictionModel.cpp model/MatchModel.cpp model/NestModel.cpp model/NormalModel.cpp model/RecordModel.cpp model/SparseMatchModel.cpp model/WordModel.cpp model/XMLModel.cpp text/English.cpp text/EnglishStemmer.cpp text/French.cpp text/FrenchStemmer.cpp text/German.cpp text/GermanStemmer.cpp text/Stemmer.cpp text/Word.cpp text/WordEmbeddingDictionary.cpp StationaryMap.cpp StateTable.cpp StateMap.cpp SmallStationaryContextMap.cpp MixerFactory.cpp Mixer.cpp IndirectMap.cpp DummyMixer.cpp ContextMap2.cpp ContextMap.cpp APM.cpp APMPost.cpp AdaptiveMap.cpp filter/DecAlpha.cpp filter/LZWDictionary.cpp filter/TextParserStateInfo.cpp model/Image8BitModel.cpp Encoder.cpp model/WordModelInfo.cpp ArithmeticEncoder.cpp model/SparseBitModel.cpp model/ChartModel.cpp LargeStationaryMap.cpp BitCount.cpp BlockType.cpp Squash.cpp Stretch.cpp Block.cpp model/BlockModel.cpp model/ContextModelBlock.cpp PredictorBlock.cpp PredictorMain.cpp StateMapPair.cpp SimdMixer.cpp)
@@ -45,7 +34,5 @@ add_executable(paq8px ProgramChecker.cpp paq8px.cpp MTFList.cpp Random.cpp Strin
 #        $<$<CXX_COMPILER_ID:GNU>:
 #        -Wall -Wextra>)
 
-# target_link_libraries(paq8px ${ZLIB_LIBRARIES})
-if (NOT DISABLE_ZLIB)
-    target_link_libraries(paq8px z)
-endif (NOT DISABLE_ZLIB)
+target_link_libraries(paq8px ${ZLIB_LIBRARIES})
+target_compile_features(paq8px PRIVATE cxx_std_17)

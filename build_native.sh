@@ -17,8 +17,10 @@ pushd aflbuild
 
 # popd
 
-export CXX_FLAGS="-std=c++17 -flto=full"
-export C_FLAGS="-flto=full"
+export ZLIB_LIBRARY=/usr/lib/x86_64-linux-gnu/libz.so
+export ZLIB_INCLUDE_DIR=/usr/include
+export CXX=/usr/local/bin/afl-clang-lto++
+export CC=/usr/local/bin/afl-clang-lto
 
 cp -r ../build ../file .
 rm ./file/FileDisk.cpp
@@ -35,14 +37,12 @@ pushd build
 export AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1
 
 cmake \
-    -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \
-    -DCMAKE_CXX_COMPILER=/usr/local/bin/afl-clang-lto \
-    -DCMAKE_LINKER=/usr/local/bin/afl-clang-lto \
-    -DCMAKE_C_COMPILER_WORKS=true \
     -DCMAKE_CXX_COMPILER_WORKS=true \
-    ..
+    -DZLIB_LIBRARY=$ZLIB_LIBRARY \
+    -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \
+    -DCMAKE_BUILD_TYPE=Debug .. --trace
 
-make -j 12 AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1
+make -j 12 AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1 VERBOSE=1
 
 mv paq8px ../paq8px-san
 make clean
@@ -53,12 +53,10 @@ export AFL_LLVM_LAF_ALL=1
 
 rm -rf CMakeCache.txt CMakeFiles
 cmake \
-    -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \
-    -DCMAKE_CXX_COMPILER=/usr/local/bin/afl-clang-lto \
-    -DCMAKE_LINKER=/usr/local/bin/afl-ld-lto \
-    -DCMAKE_C_COMPILER_WORKS=true \
     -DCMAKE_CXX_COMPILER_WORKS=true \
-    ..
+    -DZLIB_LIBRARY=$ZLIB_LIBRARY \
+    -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \
+    -DCMAKE_BUILD_TYPE=Debug ..
 
 make -j 12
 
@@ -72,12 +70,12 @@ export AFL_LLVM_CMPLOG=1
 
 rm -rf CMakeCache.txt CMakeFiles
 cmake \
-    -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \
-    -DCMAKE_CXX_COMPILER=/usr/local/bin/afl-clang-lto \
-    -DCMAKE_LINKER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_C_COMPILER_WORKS=true \
     -DCMAKE_CXX_COMPILER_WORKS=true \
-    ..
+    -DZLIB_LIBRARY=$ZLIB_LIBRARY \
+    -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \
+    -DCMAKE_EXE_LINKER_FLAGS="-lc++" \
+    -DCMAKE_BUILD_TYPE=Debug ..
 
 make -j 12
 
@@ -88,12 +86,11 @@ unset AFL_LLVM_CMPLOG
 
 rm -rf CMakeCache.txt CMakeFiles
 cmake \
-    -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \
-    -DCMAKE_CXX_COMPILER=/usr/local/bin/afl-clang-lto \
-    -DCMAKE_LINKER=/usr/local/bin/afl-ld-lto \
-    -DCMAKE_C_COMPILER_WORKS=true \
     -DCMAKE_CXX_COMPILER_WORKS=true \
-    ..
+    -DZLIB_LIBRARY=$ZLIB_LIBRARY \
+    -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \
+    -DCMAKE_EXE_LINKER_FLAGS="-lc++" \
+    -DCMAKE_BUILD_TYPE=Debug ..
 
 make -j 12
 

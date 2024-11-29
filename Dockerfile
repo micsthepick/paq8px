@@ -46,8 +46,8 @@ WORKDIR /AFLplusplus/paq8px/build
 
 RUN mv /AFLplusplus/paq8px/paq8px.cpp /AFLplusplus/paq8px/paq8px.cpp.bak
 RUN sed -r 's/int main\(/static int old_main\(/g' /AFLplusplus/paq8px/paq8px.cpp.bak > /AFLplusplus/paq8px/paq8px-mainless.cpp
-ADD paq8px-persistent.cpp /AFLplusplus/paq8px/paq8x-persistent.cpp
-RUN cat /AFLplusplus/paq8px/paq8px-mainless.cpp /AFLplusplus/paq8px/paq8x-persistent.cpp > /AFLplusplus/paq8px/paq8px.cpp
+ADD paq8px-persistent.cpp /AFLplusplus/paq8px/paq8px-persistent.cpp
+RUN cat /AFLplusplus/paq8px/paq8px-mainless.cpp /AFLplusplus/paq8px/paq8px-persistent.cpp > /AFLplusplus/paq8px/paq8px.cpp
 
 RUN cmake \
     -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \

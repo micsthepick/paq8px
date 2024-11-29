@@ -61,7 +61,7 @@ RUN AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1 make VERBOSE=1 -j 12
 RUN mv paq8px ../paq8px-san
 RUN make clean
 
-RUN export AFL_LLVM_LAF_ALL=1
+ENV AFL_LLVM_LAF_ALL=1
 
 RUN rm -rf CMakeCache.txt CMakeFiles
 RUN cmake \
@@ -74,10 +74,10 @@ RUN make VERBOSE=1 -j 12
 RUN mv paq8px ../paq8px-laf
 RUN make clean
 
-RUN unset AFL_LLVM_LAF_ALL
+ENV AFL_LLVM_LAF_ALL=
 
 
-RUN export AFL_LLVM_CMPLOG=1
+ENV AFL_LLVM_CMPLOG=1
 
 RUN rm -rf CMakeCache.txt CMakeFiles
 RUN cmake \
@@ -89,7 +89,7 @@ RUN make VERBOSE=1 -j 12
 RUN mv paq8px ../paq8px-cmplog
 RUN make clean
 
-RUN unset AFL_LLVM_CMPLOG
+ENV AFL_LLVM_CMPLOG=
 
 RUN rm -rf CMakeCache.txt CMakeFiles
 RUN cmake \

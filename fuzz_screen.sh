@@ -20,6 +20,6 @@ else
   # Create a new detached screen session that runs the Docker command
   screen -dmS fuzzing
   # Send the Docker command to the screen session for execution
-  screen -S fuzzing -X stuff "docker run --rm -ti --name fuzzpaq --mount type=bind,source=$sourcePath,destination=/outs --mount type=tmpfs,destination=/ramdisk -e AFL_TMPDIR=/ramdisk fuzzpaq:latest bash run6tmux.sh\n"
+  screen -S fuzzing -X stuff "docker run --rm -ti --name fuzzpaq --mount type=bind,source=$sourcePath,destination=/outs --mount type=tmpfs,destination=/mnt/ramdisk -e AFL_TMPDIR=/mnt/ramdisk fuzzpaq:latest bash run6tmux.sh\n"
   echo "Screen session 'fuzzing' with Docker container started. You can attach to it with 'screen -r fuzzing'."
 fi

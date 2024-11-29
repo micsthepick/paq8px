@@ -17,7 +17,7 @@ pushd aflbuild
 
 # popd
 
-export CXX_FLAGS="-stdlib=libc++ -flto=full"
+export CXX_FLAGS="-std=c++17 -flto=full"
 export C_FLAGS="-flto=full"
 
 cp -r ../build ../file .
@@ -32,18 +32,22 @@ cat ./paq8px-mainless.cpp ./paq8px-persistent.cpp > ./paq8px.cpp
 
 pushd build
 
+export AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1
+
 cmake \
     -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_CXX_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_LINKER=/usr/local/bin/afl-clang-lto \
-    -DCMAKE_C_FLAGS_INIT="$C_FLAGS" \
-    -DCMAKE_CXX_FLAGS_INIT="$CXX_FLAGS" \
+    -DCMAKE_C_COMPILER_WORKS=true \
+    -DCMAKE_CXX_COMPILER_WORKS=true \
     ..
 
-AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1 make -j 12
+make -j 12 AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1
 
 mv paq8px ../paq8px-san
 make clean
+
+unset AFL_USE_ASAN AFL_USE_UBSAN AFL_USE_CFISAN
 
 export AFL_LLVM_LAF_ALL=1
 
@@ -52,6 +56,8 @@ cmake \
     -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_CXX_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_LINKER=/usr/local/bin/afl-ld-lto \
+    -DCMAKE_C_COMPILER_WORKS=true \
+    -DCMAKE_CXX_COMPILER_WORKS=true \
     ..
 
 make -j 12
@@ -69,6 +75,8 @@ cmake \
     -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_CXX_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_LINKER=/usr/local/bin/afl-clang-lto \
+    -DCMAKE_C_COMPILER_WORKS=true \
+    -DCMAKE_CXX_COMPILER_WORKS=true \
     ..
 
 make -j 12
@@ -83,6 +91,8 @@ cmake \
     -DCMAKE_C_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_CXX_COMPILER=/usr/local/bin/afl-clang-lto \
     -DCMAKE_LINKER=/usr/local/bin/afl-ld-lto \
+    -DCMAKE_C_COMPILER_WORKS=true \
+    -DCMAKE_CXX_COMPILER_WORKS=true \
     ..
 
 make -j 12

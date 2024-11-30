@@ -42,7 +42,7 @@ cmake \
     -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \
     -DCMAKE_BUILD_TYPE=Debug .. --trace
 
-make -j 12 AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1 VERBOSE=1
+make -j 12 VERBOSE=1
 
 mv paq8px ../paq8px-san
 make clean
@@ -74,7 +74,6 @@ cmake \
     -DCMAKE_CXX_COMPILER_WORKS=true \
     -DZLIB_LIBRARY=$ZLIB_LIBRARY \
     -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \
-    -DCMAKE_EXE_LINKER_FLAGS="-lc++" \
     -DCMAKE_BUILD_TYPE=Debug ..
 
 make -j 12
@@ -89,7 +88,6 @@ cmake \
     -DCMAKE_CXX_COMPILER_WORKS=true \
     -DZLIB_LIBRARY=$ZLIB_LIBRARY \
     -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \
-    -DCMAKE_EXE_LINKER_FLAGS="-lc++" \
     -DCMAKE_BUILD_TYPE=Debug ..
 
 make -j 12

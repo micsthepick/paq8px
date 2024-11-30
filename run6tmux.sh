@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ -z "$1" ]]; then
+  echo "must provide path to mount point for fuzzing dir"
+  exit 1
+fi
+
 # Start a detached tmux session named 'mysession'
 tmux new-session -d -s mysession
 
@@ -15,7 +20,7 @@ tmux select-layout tiled
 # Assign M variable and run the script in each pane
 for i in {1..6}; do
     letter=$(echo {a..f} | cut -d ' ' -f $i)
-    tmux send-keys -t $(($i - 1)) "M=$letter ./runarg.sh" C-m
+    tmux send-keys -t $(($i - 1)) "M=$letter ./runarg.sh $1" C-m
 done
 
 # Attach to the tmux session

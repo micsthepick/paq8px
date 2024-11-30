@@ -20,6 +20,7 @@ train_bench
 afl-in
 afl-out
 aflbuild/
+fuzzing/
 # Visual Studio Specific ignores
 .vs/
 x64/

@@ -5,6 +5,8 @@ if [[ -z "$1" ]]; then
   exit 1
 fi
 
+mkdir -p $1/out
+
 # Start a detached tmux session named 'mysession'
 tmux new-session -d -s mysession
 

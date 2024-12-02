@@ -54,9 +54,9 @@ ENV CC=/usr/local/bin/afl-clang-lto
 
 RUN cmake \
     -DCMAKE_CXX_COMPILER_WORKS=true \
-    -DCMAKE_BUILD_TYPE=Debug .. --trace
+    -DCMAKE_BUILD_TYPE=Debug ..
 
-RUN AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1 make VERBOSE=1 -j 12
+RUN AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1 make -j 12
 
 RUN mv paq8px ../paq8px-san
 RUN make clean
@@ -66,9 +66,9 @@ ENV AFL_LLVM_LAF_ALL=1
 RUN rm -rf CMakeCache.txt CMakeFiles
 RUN cmake \
     -DCMAKE_CXX_COMPILER_WORKS=true \
-    -DCMAKE_BUILD_TYPE=Debug .. --trace
+    -DCMAKE_BUILD_TYPE=Debug ..
 
-RUN make VERBOSE=1 -j 12
+RUN make -j 12
 
 RUN mv paq8px ../paq8px-laf
 RUN make clean
@@ -81,9 +81,9 @@ ENV AFL_LLVM_CMPLOG=1
 RUN rm -rf CMakeCache.txt CMakeFiles
 RUN cmake \
     -DCMAKE_CXX_COMPILER_WORKS=true \
-    -DCMAKE_BUILD_TYPE=Debug .. --trace
+    -DCMAKE_BUILD_TYPE=Debug ..
 
-RUN make VERBOSE=1 -j 12
+RUN make -j 12
 
 RUN mv paq8px ../paq8px-cmplog
 RUN make clean
@@ -93,9 +93,9 @@ ENV AFL_LLVM_CMPLOG=
 RUN rm -rf CMakeCache.txt CMakeFiles
 RUN cmake \
     -DCMAKE_CXX_COMPILER_WORKS=true \
-    -DCMAKE_BUILD_TYPE=Debug .. --trace
+    -DCMAKE_BUILD_TYPE=Debug ..
 
-RUN make VERBOSE=1 -j 12
+RUN make -j 12
 
 RUN mv paq8px ../paq8px-afl
 RUN make clean

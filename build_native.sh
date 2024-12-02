@@ -40,9 +40,9 @@ cmake \
     -DCMAKE_CXX_COMPILER_WORKS=true \
     -DZLIB_LIBRARY=$ZLIB_LIBRARY \
     -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \
-    -DCMAKE_BUILD_TYPE=Debug .. --trace
+    -DCMAKE_BUILD_TYPE=Debug ..
 
-make -j 12 VERBOSE=1
+make -j 12
 
 mv paq8px ../paq8px-san
 make clean

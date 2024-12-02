@@ -11,17 +11,17 @@ int main() {
 
     unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
 
-    FMode fMode = FMode::FDECOMPRESS;
-    Mode mode = Mode::DECOMPRESS;
-    const bool doEncoding = true;
-
-    Shared shared;
-    
-    FileTmp file;
-    
-    TransformOptions transformOptions(&shared);
-
     while (__AFL_LOOP(10000)) {
+
+        FMode fMode = FMode::FDECOMPRESS;
+        Mode mode = Mode::DECOMPRESS;
+        const bool doEncoding = true;
+
+        Shared shared;
+        
+        TransformOptions transformOptions(&shared);
+
+        FileTmp file;
 
         int len = __AFL_FUZZ_TESTCASE_LEN;  // don't use the macro directly in a
                                             // call!

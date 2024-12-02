@@ -7,16 +7,6 @@ mkdir -p aflbuild
 
 pushd aflbuild
 
-# mkdir -p zlib
-
-# pushd zlib
-
-# curl -O https://zlib.net/zlib-1.3.1.tar.gz && \
-#     tar -xvzf zlib-1.3.1.tar.gz && \
-#     rm zlib-1.3.1.tar.gz
-
-# popd
-
 export ZLIB_LIBRARY=/usr/lib/x86_64-linux-gnu/libz.so
 export ZLIB_INCLUDE_DIR=/usr/include
 export CXX=/usr/local/bin/afl-clang-lto++
@@ -70,7 +60,6 @@ export AFL_LLVM_CMPLOG=1
 
 rm -rf CMakeCache.txt CMakeFiles
 cmake \
-    -DCMAKE_C_COMPILER_WORKS=true \
     -DCMAKE_CXX_COMPILER_WORKS=true \
     -DZLIB_LIBRARY=$ZLIB_LIBRARY \
     -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \

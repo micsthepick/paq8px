@@ -19,7 +19,7 @@ paq8pxd
 train_bench
 afl-in
 afl-out
-aflbuild/
+*build/
 fuzzing/
 # Visual Studio Specific ignores
 .vs/

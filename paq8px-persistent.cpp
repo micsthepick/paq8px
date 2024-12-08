@@ -38,7 +38,7 @@ int main() {
 
         __AFL_COVERAGE_OFF();
 
-        Shared shared;
+        Shared shared = {};
         shared.chosenSimd = SIMDType::SIMD_AVX2;
         TransformOptions transformOptions(&shared);
 

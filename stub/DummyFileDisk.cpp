@@ -59,7 +59,7 @@ void FileDisk::createTmp() {
 }
 
 void FileDisk::close() {
-        if (file != nullptr) {
+    if (file != nullptr) {
         // Get the underlying buffer from the FILE* (only valid for fmemopen)
         void* mmap_region = nullptr;
         size_t mmap_size = 0;

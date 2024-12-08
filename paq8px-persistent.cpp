@@ -1,15 +1,20 @@
 #ifndef __AFL_FUZZ_TESTCASE_LEN
-  ssize_t fuzz_len;
-  #define __AFL_FUZZ_TESTCASE_LEN fuzz_len
-  unsigned char fuzz_buf[1024000];
-  #define __AFL_FUZZ_TESTCASE_BUF fuzz_buf
-  #define __AFL_FUZZ_INIT() void sync(void);
-  #define __AFL_LOOP(x) ((fuzz_len = read(0, fuzz_buf, sizeof(fuzz_buf))) > 0 ? 1 : 0)
-  #define __AFL_INIT() sync()
+    ssize_t fuzz_len;
+    #define __AFL_FUZZ_TESTCASE_LEN fuzz_len
+    unsigned char fuzz_buf[1024000];
+    #define __AFL_FUZZ_TESTCASE_BUF fuzz_buf
+    #define __AFL_FUZZ_INIT() void sync(void);
+    #define __AFL_LOOP(x) ((fuzz_len = read(0, fuzz_buf, sizeof(fuzz_buf))) > 0 ? 1 : 0)
+    #define __AFL_INIT() sync()
+    #define __AFL_COVERAGE() void
+    #define __AFL_COVERAGE_ON() void
+    #define __AFL_COVERAGE_OFF() void
 #endif
 
-__AFL_FUZZ_INIT();
+#include "filter/Filters.hpp"
 
+__AFL_FUZZ_INIT();
+__AFL_COVERAGE();
 
 #pragma clang optimize off
 #pragma GCC optimize("O0")
@@ -21,32 +26,42 @@ int main() {
 
     unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
 
-    while (__AFL_LOOP(10000)) {
+    FMode fMode = FMode::FDECOMPRESS;
+    Mode mode = Mode::DECOMPRESS;
+    const bool doEncoding = true;
 
-        FMode fMode = FMode::FDECOMPRESS;
-        Mode mode = Mode::DECOMPRESS;
-        const bool doEncoding = true;
+    while (__AFL_LOOP(10000)) {
+        __AFL_COVERAGE_ON();
+
+        uint64_t len = __AFL_FUZZ_TESTCASE_LEN;
+        if (len < 8) continue;
+
+        __AFL_COVERAGE_OFF();
 
         Shared shared;
-        
+        shared.chosenSimd = SIMDType::SIMD_AVX2;
         TransformOptions transformOptions(&shared);
 
         FileTmp file;
 
-        int len = __AFL_FUZZ_TESTCASE_LEN;  // don't use the macro directly in a
-                                            // call!
+        FileDisk out;
 
-        if (len < 8) continue;  // check for a required/useful minimum input length
 
         file.blockWrite(__AFL_FUZZ_TESTCASE_BUF, len);
 
         Encoder en(&shared, doEncoding, mode, &file);
-        len = Block::DecodeBlockHeader(&en);
 
-        decompressRecursive(&file, len, en, fMode, &transformOptions);
+        uint64_t blockLen = Block::DecodeBlockHeader(&en);
+
+        // Enable coverage for decoding logic
+        __AFL_COVERAGE_ON();
+
+        decompressRecursive(&out, len, en, fMode, &transformOptions);
+
+        // Disable coverage to exclude cleanup/reset code.
+        __AFL_COVERAGE_OFF();
 
         /* Reset state. e.g. libtarget_free(tmp) */
-        file.close();
     }
 
     return 0;

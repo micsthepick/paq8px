@@ -9,8 +9,14 @@ pushd aflbuild
 
 export ZLIB_LIBRARY=/usr/lib/x86_64-linux-gnu/libz.so
 export ZLIB_INCLUDE_DIR=/usr/include
-export CXX=/usr/local/bin/afl-clang-lto++
-export CC=/usr/local/bin/afl-clang-lto
+if command -v ccache >/dev/null 2>&1; then
+    export CXX="ccache afl-clang-lto++"
+    export CC="ccache afl-clang-lto"
+else
+    export CXX="afl-clang-lto++"
+    export CC="afl-clang-lto"
+fi
+
 
 cp -r ../build ../file .
 rm ./file/FileDisk.cpp
@@ -24,65 +30,65 @@ cat ./paq8px-mainless.cpp ./paq8px-persistent.cpp > ./paq8px.cpp
 
 pushd build
 
-export AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1
 
+export AFL_USE_ASAN=1 AFL_USE_UBSAN=1 AFL_USE_CFISAN=1 CCACHE_NAMESPACE="san"
 cmake \
     -DCMAKE_CXX_COMPILER_WORKS=true \
+    -DCMAKE_C_COMPILER_WORKS=true \
     -DZLIB_LIBRARY=$ZLIB_LIBRARY \
     -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \
     -DCMAKE_BUILD_TYPE=Debug ..
-
-make -j 12
+CCACHE_NAMESPACE="san" make -j 12
 
 mv paq8px ../paq8px-san
-make clean
 
+make clean
+rm -rf CMakeCache.txt CMakeFiles
 unset AFL_USE_ASAN AFL_USE_UBSAN AFL_USE_CFISAN
 
-export AFL_LLVM_LAF_ALL=1
 
-rm -rf CMakeCache.txt CMakeFiles
+export AFL_LLVM_LAF_ALL=1 CCACHE_NAMESPACE="laf"
 cmake \
     -DCMAKE_CXX_COMPILER_WORKS=true \
+    -DCMAKE_C_COMPILER_WORKS=true \
     -DZLIB_LIBRARY=$ZLIB_LIBRARY \
     -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \
     -DCMAKE_BUILD_TYPE=Debug ..
-
 make -j 12
 
 mv paq8px ../paq8px-laf
-make clean
 
+make clean
+rm -rf CMakeCache.txt CMakeFiles
 unset AFL_LLVM_LAF_ALL
 
 
-export AFL_LLVM_CMPLOG=1
-
-rm -rf CMakeCache.txt CMakeFiles
+export AFL_LLVM_CMPLOG=1 CCACHE_NAMESPACE="cmplog"
 cmake \
     -DCMAKE_CXX_COMPILER_WORKS=true \
+    -DCMAKE_C_COMPILER_WORKS=true \
     -DZLIB_LIBRARY=$ZLIB_LIBRARY \
     -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \
     -DCMAKE_BUILD_TYPE=Debug ..
-
 make -j 12
 
 mv paq8px ../paq8px-cmplog
 make clean
-
-unset AFL_LLVM_CMPLOG
-
 rm -rf CMakeCache.txt CMakeFiles
+
+
+export CCACHE_NAMESPACE="afl"
 cmake \
     -DCMAKE_CXX_COMPILER_WORKS=true \
+    -DCMAKE_C_COMPILER_WORKS=true \
     -DZLIB_LIBRARY=$ZLIB_LIBRARY \
     -DZLIB_INCLUDE_DIR=$ZLIB_INCLUDE_DIR \
     -DCMAKE_BUILD_TYPE=Debug ..
-
 make -j 12
 
 mv paq8px ../paq8px-afl
 make clean
+rm -rf CMakeCache.txt CMakeFiles
 
 popd
 

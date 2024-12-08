@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.22)
 project(paq8px)
 
 find_package(ZLIB)
@@ -34,5 +34,6 @@ add_executable(paq8px ProgramChecker.cpp paq8px.cpp MTFList.cpp Random.cpp Strin
 #        $<$<CXX_COMPILER_ID:GNU>:
 #        -Wall -Wextra>)
 
+set_property(TARGET paq8px PROPERTY CXX_STANDARD 17)
+
 target_link_libraries(paq8px ${ZLIB_LIBRARIES})
-target_compile_features(paq8px PRIVATE cxx_std_17)

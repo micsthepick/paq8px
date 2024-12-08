@@ -12,9 +12,14 @@ export ZLIB_INCLUDE_DIR=/usr/include
 if command -v ccache >/dev/null 2>&1; then
     export CXX="ccache afl-clang-lto++"
     export CC="ccache afl-clang-lto"
-else
+elif command -v afl-clang-lto >/dev/null 2>&1; then
     export CXX="afl-clang-lto++"
     export CC="afl-clang-lto"
+else
+    echo USING CLANG FAST!!
+    sleep 1
+    export CXX="afl-clang-fast++"
+    export CC="afl-clang-fast"
 fi
 
 

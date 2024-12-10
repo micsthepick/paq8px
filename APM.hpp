@@ -1,5 +1,9 @@
 #pragma once
 
+#include <vector>
+#include <filesystem>
+#include <fstream>
+
 #include "AdaptiveMap.hpp"
 
 /**
@@ -10,6 +14,9 @@ private:
   const int N; /**< Number of contexts */
   const int steps;
   int cxt; /**< context index of last prediction */
+
+  void loadOrInitialize(int n, int s, int limit);
+  void saveToFile(const std::filesystem::path& filepath);
 
 public:
   int limit; //1..1023

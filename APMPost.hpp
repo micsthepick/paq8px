@@ -1,5 +1,9 @@
 #pragma once
 
+#include <vector>
+#include <filesystem>
+#include <fstream>
+
 #include <cstdint>
 #include <cassert>
 #include "Shared.hpp"
@@ -14,6 +18,9 @@ private:
   uint32_t index; /**< last p, context */
   const uint32_t n; /**< number of contexts */
   Array<uint64_t> t;
+
+  void loadOrInitialize();
+  void saveToFile(const std::filesystem::path& filepath);
 
 public:
   /**

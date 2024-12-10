@@ -1,5 +1,9 @@
 #pragma once
 
+#include <vector>
+#include <filesystem>
+#include <fstream>
+
 #include <cstdint>
 #include <cassert>
 #include "Shared.hpp"
@@ -16,6 +20,9 @@ private:
   const int n; /**< number of contexts */
   Array<uint16_t> t; /**< [n][33]:  p, context -> p */
   const int rate;
+
+  void loadOrInitialize();
+  void saveToFile(const std::filesystem::path& filepath);
 
 public:
   /**

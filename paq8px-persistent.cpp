@@ -14,7 +14,6 @@
 #include "filter/Filters.hpp"
 
 __AFL_FUZZ_INIT();
-__AFL_COVERAGE();
 
 #pragma clang optimize off
 #pragma GCC optimize("O0")
@@ -31,14 +30,11 @@ int main() {
     const bool doEncoding = true;
 
     while (__AFL_LOOP(10000)) {
-        __AFL_COVERAGE_ON();
-
         uint64_t len = __AFL_FUZZ_TESTCASE_LEN;
         if (len < 8) continue;
 
-        __AFL_COVERAGE_OFF();
-
-        Shared shared = {};
+        Shared shared;
+        shared.reset();
         shared.chosenSimd = SIMDType::SIMD_AVX2;
         TransformOptions transformOptions(&shared);
 
@@ -53,13 +49,8 @@ int main() {
 
         uint64_t blockLen = Block::DecodeBlockHeader(&en);
 
-        // Enable coverage for decoding logic
-        __AFL_COVERAGE_ON();
-
         decompressRecursive(&out, len, en, fMode, &transformOptions);
 
-        // Disable coverage to exclude cleanup/reset code.
-        __AFL_COVERAGE_OFF();
 
         /* Reset state. e.g. libtarget_free(tmp) */
     }

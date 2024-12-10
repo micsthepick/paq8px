@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.jsfx": "Jesusonic",
+        "*.jsfx-inc": "Jesusonic",
+        "stdexcept": "cpp",
+        "chrono": "cpp"
+    }
+}

@@ -43,7 +43,7 @@ int main() {
         FileDisk out;
 
 
-        file.blockWrite(__AFL_FUZZ_TESTCASE_BUF, len);
+        file.blockWrite(buf, len);
 
         Encoder en(&shared, doEncoding, mode, &file);
 

@@ -15,9 +15,6 @@
 
 __AFL_FUZZ_INIT();
 
-#pragma clang optimize off
-#pragma GCC optimize("O0")
-
 int main() {
     #ifdef __AFL_HAVE_MANUAL_CONTROL
     __AFL_INIT();
@@ -29,30 +26,43 @@ int main() {
     Mode mode = Mode::DECOMPRESS;
     const bool doEncoding = true;
 
+    int simdIset = simdDetect();
+    SIMDType simdIChose;
+
+    if (simdIset == 11) {
+        simdIChose = SIMDType::SIMD_NEON;
+    } else if (simdIset >= 10) {
+        simdIChose = SIMDType::SIMD_AVX512;
+    } else if (simdIset >= 9) {
+        simdIChose = SIMDType::SIMD_AVX2;
+    } else if( simdIset >= 3 ) {
+        simdIChose = SIMDType::SIMD_SSE2;
+    } else {
+        simdIChose = SIMDType::SIMD_NONE;
+    }
     while (__AFL_LOOP(10000)) {
         uint64_t len = __AFL_FUZZ_TESTCASE_LEN;
         if (len < 8) continue;
 
         Shared shared;
         shared.reset();
-        shared.chosenSimd = SIMDType::SIMD_AVX2;
+        shared.init((buf[0] % 12) + 1);
+        shared.options = buf[1];
+        shared.chosenSimd  = simdIChose;
+
         TransformOptions transformOptions(&shared);
 
         FileTmp file;
 
         FileDisk out;
 
-
-        file.blockWrite(buf, len);
+        file.blockWrite(&buf[2], len - 2);
 
         Encoder en(&shared, doEncoding, mode, &file);
 
         uint64_t blockLen = Block::DecodeBlockHeader(&en);
 
-        decompressRecursive(&out, len, en, fMode, &transformOptions);
-
-
-        /* Reset state. e.g. libtarget_free(tmp) */
+        decompressRecursive(&out, len - 2, en, fMode, &transformOptions);
     }
 
     return 0;
